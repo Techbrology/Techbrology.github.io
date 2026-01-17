@@ -114,35 +114,11 @@
 
 <script>
 /* ============================
-   AUTO-DETECT REPO
+   CONFIG (EDIT THIS ONCE)
 ============================ */
 
-function detectRepo() {
-  const host = location.hostname;
-  const pathParts = location.pathname.split("/").filter(Boolean);
-
-  // techbrology.github.io/repo-name/
-  if (host === "techbrology.github.io" && pathParts.length > 0) {
-    return {
-      owner: "techbrology",
-      repo: pathParts[0]
-    };
-  }
-
-  return null;
-}
-
-const detected = detectRepo();
-
-if (!detected) {
-  document.getElementById("error").style.display = "block";
-  document.getElementById("error").textContent =
-    "Could not detect repository from URL. This page must be served from techbrology.github.io/<repo>/";
-  throw new Error("Repo detection failed");
-}
-
-const OWNER = detected.owner;
-const REPO  = detected.repo;
+const OWNER = "techbrology";
+const REPO  = "YOUR_REPO_NAME_HERE"; // 👈 exact repo name
 
 /* ============================
    GITHUB API
@@ -196,7 +172,9 @@ function render(files) {
 
   for (const f of files) {
     const li = document.createElement("li");
-    const url = `/${REPO}/${f.path}`;
+
+    // Custom domain = root-based paths
+    const url = `/${f.path}`;
 
     li.innerHTML = `
       <div>
@@ -216,7 +194,7 @@ function render(files) {
 
 (async () => {
   try {
-    statusEl.textContent = `Loading HTML projects from "${REPO}"…`;
+    statusEl.textContent = `Loading HTML projects…`;
     const files = await findHtmlFiles();
     statusEl.textContent = `Found ${files.length} HTML project(s)`;
     render(files);
