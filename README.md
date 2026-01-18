@@ -31,17 +31,15 @@
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
       background:var(--bg1);
       color:var(--text);
-      overflow:hidden;
-      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+      overflow:auto;
+      min-height:100%;
     }
 
     /* Layout */
     .app{
-      height:100%;
-      height:100vh;
-      height:100dvh;
-      min-height:100vh;
-      min-height:100dvh;
+      flex:1;
       min-height:0;
       display:grid;
       grid-template-columns: 74px 260px 1fr 280px;
