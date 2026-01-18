@@ -2783,7 +2783,7 @@ ${transcript}
       const gate_interval_seconds = toInt(el("c_interval").value || "30", 30);
       const humanize_pacing = !!el("c_humanize").checked;
 
-      await apiSend("/characters", {
+      const created = await apiSend("/characters", {
         name,
         provider,
         model,
@@ -2796,6 +2796,15 @@ ${transcript}
         profile_color,
         humanize_pacing,
       });
+
+      if (created && created.id && activeConversationId){
+        const conv = conversationsById[activeConversationId];
+        const ids = Array.isArray(conv?.character_ids) ? conv.character_ids.slice() : [];
+        if (!ids.includes(created.id)){
+          ids.push(created.id);
+          await apiSend(`/conversations/${activeConversationId}`, { character_ids: ids }, "PATCH");
+        }
+      }
 
       el("c_name").value = "";
       el("c_sys").value = "";
