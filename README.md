@@ -1,9 +1,10 @@
-
+<!doctype html>
 <html>
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Discord AI2026</title>
+  <link rel="icon" href="c.png" type="image/png" />
   <style>
 
     :root{
@@ -31,12 +32,16 @@
       background:var(--bg1);
       color:var(--text);
       overflow:hidden;
+      min-height:100vh;
     }
 
     /* Layout */
     .app{
       height:100%;
       height:100vh;
+      height:100dvh;
+      min-height:100vh;
+      min-height:100dvh;
       min-height:0;
       display:grid;
       grid-template-columns: 74px 260px 1fr 280px;
@@ -412,6 +417,7 @@
       border-top:1px solid var(--line);
       background: rgba(15,17,23,.82);
       backdrop-filter: blur(8px);
+      padding-bottom: calc(12px + env(safe-area-inset-bottom));
     }
     .usernameRow{
       display:flex;
@@ -453,6 +459,7 @@
       display:flex;
       gap:10px;
       align-items:flex-end;
+      flex-wrap: wrap;
     }
     .msgInput{
       flex:1;
@@ -465,6 +472,7 @@
       overflow:auto;
       outline:none;
       white-space:pre-wrap;
+      min-width:0;
     }
     .msgInput[contenteditable="true"]:empty:before{
       content: attr(data-placeholder);
@@ -603,6 +611,18 @@
     @media (max-width: 720px){
       .app{ grid-template-columns: 74px 1fr; }
       .channels{ display:none; }
+    }
+    @media (max-width: 560px){
+      .app{ grid-template-columns: 60px 1fr; }
+      .servers{ padding:8px 6px; }
+      .srv{ width:46px; height:46px; border-radius:14px; }
+      .searchBox{ display:none; }
+    }
+    @media (max-height: 700px){
+      .topbar{ padding:8px 10px; }
+      .composer{ padding:8px; }
+      .usernameRow{ margin-bottom:6px; }
+      .msgInput{ max-height:120px; }
     }
   
 </style>
