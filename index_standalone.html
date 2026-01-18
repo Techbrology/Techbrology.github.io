@@ -1,0 +1,3194 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Discord AI2026</title>
+  <link rel="icon" href="c.png" type="image/png" />
+  <style>
+
+    :root{
+      --bg0:#0b0d12;
+      --bg1:#0f1117;
+      --bg2:#151826;
+      --bg3:#1a1f2e;
+      --line:#232a3a;
+      --text:#e7e7e7;
+      --muted:#9aa4b2;
+      --accent:#5865F2;
+      --good:#3ba55d;
+      --warn:#faa61a;
+      --bad:#ed4245;
+      --info:#3498db;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius:14px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height:100%; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background:var(--bg1);
+      color:var(--text);
+      display:flex;
+      flex-direction:column;
+      overflow:auto;
+      min-height:100%;
+    }
+
+    /* Layout */
+    .app{
+      flex:1;
+      min-height:0;
+      display:grid;
+      grid-template-columns: 74px 260px 1fr 280px;
+      background:var(--bg1);
+    }
+
+    /* Left "servers" rail */
+    .servers{
+      background: #07080b;
+      border-right:1px solid #0f1220;
+      padding:10px 8px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      align-items:center;
+      min-height:0;
+      overflow:hidden;
+    }
+    .srvScroll{
+      flex:1;
+      min-height:0;
+      width:100%;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:10px;
+      overflow:auto;
+      padding-right:2px;
+    }
+    .srvBottom{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      align-items:center;
+      padding-top:6px;
+    }
+    .srv{
+      width:52px; height:52px;
+      border-radius:18px;
+      background: #141827;
+      border:1px solid #1f2638;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:900;
+      cursor:pointer;
+      transition: .12s ease;
+      user-select:none;
+    }
+    .srv:hover{ transform: translateY(-1px); border-color:#2b3550; }
+    .srv.active{ background: #1b2140; border-color: #2f3a66; }
+    .srvDot{
+      width:10px; height:10px; border-radius:999px;
+      background:var(--bad);
+      position:absolute; transform: translate(18px, -18px);
+      border:2px solid #07080b;
+      display:none;
+    }
+
+    /* Channels column */
+    .channels{
+      background: #0c0f16;
+      border-right:1px solid #0f1220;
+      display:flex;
+      flex-direction:column;
+      min-width:0;
+      min-height:0;
+      overflow:hidden;
+    }
+    .chanTop{
+      padding:12px 12px 10px;
+      border-bottom:1px solid #0f1220;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .brand{
+      display:flex; align-items:center; gap:10px;
+      min-width:0;
+    }
+    .brandLogo{
+      width:34px; height:34px;
+      border-radius:12px;
+      background: linear-gradient(135deg, #202a57, #101426);
+      border:1px solid #273055;
+      display:flex; align-items:center; justify-content:center;
+      font-weight:900;
+      color:#cdd6ff;
+    }
+    .brandText{ min-width:0; }
+    .brandText .t1{ font-weight:900; }
+    .brandText .t2{ color:var(--muted); font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .btnIcon{
+      border:1px solid #1f2638;
+      background:#121528;
+      color:var(--text);
+      width:34px; height:34px;
+      border-radius:12px;
+      cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      transition:.12s ease;
+    }
+    .btnIcon:hover{ border-color:#2b3550; transform: translateY(-1px); }
+
+    .chanScroll{ 
+      flex:1;
+      padding:12px; 
+      overflow:auto; 
+      min-height:0; 
+    }
+    .sectionTitle{
+      display:flex; align-items:center; justify-content:space-between;
+      color:var(--muted);
+      font-size:12px;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      margin:8px 0;
+    }
+    .channelItem{
+      padding:9px 10px;
+      border-radius:12px;
+      cursor:pointer;
+      border:1px solid transparent;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .channelItem:hover{ background:#101428; }
+    .channelItem.active{ background:#101428; border-color:#2a3455; }
+    .hash{ color:var(--muted); font-weight:900; margin-right:6px; }
+    .chName{
+      min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+      font-weight:700;
+    }
+    .pill{
+      font-size:11px;
+      padding:3px 8px;
+      border-radius:999px;
+      background:#111522;
+      border:1px solid #1f2638;
+      color:var(--muted);
+      white-space:nowrap;
+    }
+
+    .card{
+      background:#0f1322;
+      border:1px solid #1f2638;
+      border-radius: var(--radius);
+      padding:10px;
+      box-shadow: 0 0 0 rgba(0,0,0,0);
+    }
+    input, textarea, select{
+      width:100%;
+      background:#0f1322;
+      border:1px solid #1f2638;
+      color:var(--text);
+      border-radius:12px;
+      padding:10px;
+      outline:none;
+    }
+    textarea{ resize: vertical; min-height:80px; }
+    .tiny{ font-size:12px; color:var(--muted); }
+    .btn{
+      border:1px solid #273055;
+      background:#121528;
+      color:var(--text);
+      border-radius:12px;
+      padding:10px 12px;
+      cursor:pointer;
+      font-weight:700;
+      transition:.12s ease;
+    }
+    .btn:hover{ border-color:#32406f; transform: translateY(-1px); }
+    .btn.primary{ background: var(--accent); border-color:#434fc7; color:white; }
+    .row{ display:flex; gap:10px; align-items:center; }
+    .row2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+
+    details summary{ cursor:pointer; color:var(--muted); }
+    details > div{ margin-top:10px; }
+
+    /* Chat column */
+    .chatCol{
+      display:flex;
+      flex-direction:column;
+      min-width:0;
+      min-height:0;
+      overflow:hidden;
+      background: var(--bg1);
+    }
+    .topbar{
+      padding:10px 12px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      background: rgba(15,17,23,.82);
+      backdrop-filter: blur(8px);
+    }
+    .topLeft{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+    .chanTitle{
+      display:flex; align-items:center;
+      gap:8px;
+      min-width:0;
+    }
+    .chanTitle .name{
+      font-weight:900;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .meta{
+      color:var(--muted);
+      font-size:12px;
+      white-space:nowrap;
+      overflow:hidden; text-overflow:ellipsis;
+    }
+    .actions{ display:flex; gap:8px; align-items:center; }
+    .searchBox{
+      display:flex; align-items:center; gap:8px;
+      background:#0f1322;
+      border:1px solid #1f2638;
+      border-radius:12px;
+      padding:8px 10px;
+      min-width: 220px;
+    }
+    .searchBox input{
+      border:0; padding:0; background:transparent; outline:none;
+    }
+    .kbd{
+      font-size:11px;
+      padding:2px 6px;
+      border-radius:7px;
+      border:1px solid #2a3455;
+      color:var(--muted);
+      background:#0b0f1f;
+    }
+
+    .chatScroll{
+      flex:1;
+      overflow:auto;
+      padding: 16px 14px;
+      min-height:0;
+    }
+    .welcome{
+      margin: 8px 0 14px;
+      padding: 14px;
+      border-radius: var(--radius);
+      border:1px dashed #2a3455;
+      color:var(--muted);
+    }
+
+    .msgRow{
+      display:grid;
+      grid-template-columns: 46px 1fr;
+      gap:10px;
+      padding: 6px 6px;
+      border-radius: 12px;
+      position:relative;
+    }
+    .msgRow:hover{ background: rgba(16,20,40,.6); }
+    .avatar{
+      width:40px; height:40px;
+      border-radius: 14px;
+      border:1px solid #2a3455;
+      background:#121528;
+      display:flex; align-items:center; justify-content:center;
+      font-weight:900;
+      color:#dbe3ff;
+      user-select:none;
+    }
+    .msgMain{ min-width:0; }
+    .msgHeader{
+      display:flex;
+      align-items:baseline;
+      gap:10px;
+      min-width:0;
+    }
+    .msgHeader .author{
+      font-weight:900;
+      white-space:nowrap;
+    }
+    .msgHeader .time{
+      font-size:12px;
+      color:var(--muted);
+      white-space:nowrap;
+    }
+    .msgHeader .tags{
+      display:flex; gap:6px; align-items:center;
+    }
+    .tag{
+      font-size:11px;
+      padding:2px 7px;
+      border-radius:999px;
+      border:1px solid #2a3455;
+      background:#0f1322;
+      color:var(--muted);
+    }
+    .msgText{
+      margin-top:4px;
+      white-space:pre-wrap;
+      word-break: break-word;
+      line-height:1.35em;
+    }
+    .msgText code{
+      background:#0b0f1f;
+      border:1px solid #1f2638;
+      padding: 2px 6px;
+      border-radius: 8px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.95em;
+    }
+    .replyPreview{
+      border-left: 3px solid #2a3455;
+      padding-left:10px;
+      margin-top:8px;
+      color:var(--muted);
+      font-size:12px;
+    }
+    .reactions{
+      display:flex;
+      gap:6px;
+      flex-wrap:wrap;
+      margin-top:8px;
+    }
+    .react{
+      border:1px solid #2a3455;
+      background:#0f1322;
+      border-radius: 999px;
+      padding: 4px 8px;
+      cursor:pointer;
+      font-size:12px;
+      color: var(--text);
+      display:flex;
+      gap:6px;
+      align-items:center;
+      user-select:none;
+    }
+    .react:hover{ border-color:#3a4a85; transform: translateY(-1px); }
+    .react .cnt{ color:var(--muted); }
+
+    .msgActions{
+      position:absolute;
+      right:10px;
+      top:8px;
+      display:none;
+      gap:6px;
+      background: rgba(11,13,18,.85);
+      border:1px solid #1f2638;
+      padding:6px;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+    }
+    .msgRow:hover .msgActions{ display:flex; }
+    .miniBtn{
+      width:30px; height:30px;
+      border-radius:10px;
+      border:1px solid #273055;
+      background:#121528;
+      color:var(--text);
+      cursor:pointer;
+    }
+    .miniBtn:hover{ border-color:#3a4a85; transform: translateY(-1px); }
+
+    /* Composer */
+    .composer{
+      padding:12px;
+      border-top:1px solid var(--line);
+      background: rgba(15,17,23,.82);
+      backdrop-filter: blur(8px);
+      padding-bottom: calc(12px + env(safe-area-inset-bottom));
+    }
+    .usernameRow{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      margin-bottom:8px;
+    }
+    .usernameRow .label{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:800;
+      letter-spacing:.02em;
+      white-space:nowrap;
+    }
+    .usernameInput{
+      width:220px;
+      max-width:50vw;
+    }
+    .replyBar{
+      display:none;
+      margin-bottom:8px;
+      padding:10px;
+      border-radius:12px;
+      border:1px solid #2a3455;
+      background:#0f1322;
+      color:var(--muted);
+      font-size:12px;
+    }
+    .replyBar .x{
+      margin-left:auto;
+      width:26px; height:26px;
+      border-radius:10px;
+      border:1px solid #273055;
+      background:#121528;
+      color:var(--text);
+      cursor:pointer;
+    }
+    .composerRow{
+      display:flex;
+      gap:10px;
+      align-items:flex-end;
+      flex-wrap: wrap;
+    }
+    .msgInput{
+      flex:1;
+      padding:10px 12px;
+      border-radius: 14px;
+      border:1px solid #1f2638;
+      background:#0f1322;
+      min-height:42px;
+      max-height:160px;
+      overflow:auto;
+      outline:none;
+      white-space:pre-wrap;
+      min-width:0;
+    }
+    .msgInput[contenteditable="true"]:empty:before{
+      content: attr(data-placeholder);
+      color: var(--muted);
+    }
+    .sendBtn{
+      width:44px; height:44px;
+      border-radius: 14px;
+      background: var(--accent);
+      border:1px solid #434fc7;
+      color:white;
+      font-weight:900;
+      cursor:pointer;
+    }
+
+    /* Right panel (members / pins / dev) */
+    .right{
+      background:#0c0f16;
+      border-left:1px solid #0f1220;
+      display:flex;
+      flex-direction:column;
+      min-width:0;
+      min-height:0;
+      overflow:hidden;
+    }
+    .rightTabs{
+      padding:10px 10px 8px;
+      border-bottom:1px solid #0f1220;
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+    .tab{
+      padding:8px 10px;
+      border-radius:12px;
+      border:1px solid transparent;
+      cursor:pointer;
+      font-weight:800;
+      font-size:12px;
+      color:var(--muted);
+      user-select:none;
+    }
+    .tab.active{ background:#101428; border-color:#2a3455; color:var(--text); }
+    .rightScroll{ 
+      flex:1;
+      padding:12px; 
+      overflow:auto; 
+      min-height:0; 
+    }
+    .member{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:10px;
+      border-radius:12px;
+    }
+    .member:hover{ background:#101428; }
+    .memberL{ display:flex; gap:10px; align-items:center; min-width:0; }
+    .mName{ font-weight:900; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .mAbout{ color:var(--muted); font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .statusDot{
+      width:10px; height:10px; border-radius:999px;
+      border:2px solid #0c0f16;
+      background: var(--muted);
+      box-shadow: 0 0 0 2px rgba(0,0,0,.12);
+    }
+    .st-online{ background: var(--good); }
+    .st-idle{ background: var(--warn); }
+    .st-dnd{ background: var(--bad); }
+    .st-offline{ background: #5d6776; }
+    .st-typing{ background: var(--info); }
+
+    /* Modals */
+    .modalBack{
+      position:fixed; inset:0;
+      background: rgba(0,0,0,.55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+      z-index: 50;
+    }
+    .modal{
+      width:min(920px, 100%);
+      background:#0c0f16;
+      border:1px solid #273055;
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .modalHead{
+      padding:12px 12px;
+      border-bottom:1px solid #0f1220;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .modalBody{ padding:12px; max-height: 78vh; overflow:auto; }
+    .closeX{
+      width:36px; height:36px; border-radius:12px;
+      border:1px solid #273055; background:#121528;
+      color:var(--text); cursor:pointer;
+    }
+    .profileGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    .profileGrid .full{
+      grid-column: 1 / -1;
+    }
+
+    .toggle{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:10px;
+      padding:10px;
+      border-radius:12px;
+      border:1px solid #1f2638;
+      background:#0f1322;
+      margin:8px 0;
+    }
+    .toggle label{ font-weight:800; }
+    .toggle .sub{ font-size:12px; color:var(--muted); margin-top:2px; font-weight:600; }
+    .toggle input[type="checkbox"]{ width:18px; height:18px; }
+    .devBar{ display:flex; gap:8px; align-items:center; margin-bottom:10px; }
+    .devBar .btn{ padding:6px 10px; font-size:12px; }
+
+    /* Responsive */
+    @media (max-width: 980px){
+      .app{ grid-template-columns: 74px 260px 1fr; }
+      .right{ display:none; }
+      .searchBox{ display:none; }
+    }
+    @media (max-width: 720px){
+      .app{ grid-template-columns: 74px 1fr; }
+      .channels{ display:none; }
+    }
+    @media (max-width: 560px){
+      .app{ grid-template-columns: 60px 1fr; }
+      .servers{ padding:8px 6px; }
+      .srv{ width:46px; height:46px; border-radius:14px; }
+      .searchBox{ display:none; }
+    }
+    @media (max-height: 700px){
+      .topbar{ padding:8px 10px; }
+      .composer{ padding:8px; }
+      .usernameRow{ margin-bottom:6px; }
+      .msgInput{ max-height:120px; }
+    }
+  
+</style>
+</head>
+<body>
+  <div class="app">
+    <!-- Servers -->
+    <div class="servers">
+      <div class="srvScroll" id="serverScroll">
+        <div class="srv active" id="srvHome" title="AI Hub" style="position:relative">
+          AI
+          <div class="srvDot" id="srvDot"></div>
+        </div>
+      </div>
+
+      <div class="srvBottom">
+        <button class="btnIcon" id="openSettings" title="Settings">⚙️</button>
+      </div>
+    </div>
+
+    <!-- Channels -->
+    <div class="channels" id="channelsCol">
+      <div class="chanTop">
+        <div class="brand">
+          <div class="brandLogo">D</div>
+          <div class="brandText">
+            <div class="t1">Discord AI2026</div>
+            <div class="t2" id="healthLine">Checking Ollama…</div>
+          </div>
+        </div>
+        <button class="btnIcon" id="refreshAll" title="Refresh">↻</button>
+      </div>
+
+      <div class="chanScroll">
+        <div class="sectionTitle">
+          <div>Text Channels</div>
+          <button class="btnIcon" id="newChannel" title="Create Channel">＋</button>
+        </div>
+        <div id="channelsList"></div>
+
+        <div class="sectionTitle" style="margin-top:14px;">
+          <div>AI Members</div>
+          <span class="pill" id="memberCount">0</span>
+        </div>
+
+        <details>
+          <summary class="tiny">Add a new AI</summary>
+          <div class="card" style="margin-top:10px;">
+            <div class="row2">
+              <input id="c_name" placeholder="Name (e.g. Nova)" />
+              <input id="c_about" placeholder="About (optional)" />
+            </div>
+                        <div class="row2" style="margin-top:10px;">
+              <select id="c_provider">
+                <option value="openrouter">OpenRouter (cloud)</option>
+                <option value="puter">Puter (free)</option>
+              </select>
+              <select id="c_model" style="display:none"></select>
+            </div>
+            <div class="row2" style="margin-top:10px;">
+              <select id="c_gate_provider">
+                <option value="openrouter">Gate: OpenRouter (cloud)</option>
+                <option value="puter">Gate: Puter (free)</option>
+              </select>
+              <select id="c_gate" style="display:none"></select>
+            </div>
+
+            <div class="card" id="openrouterCard" style="margin-top:10px; display:none;">
+              <div style="font-weight:900">OpenRouter</div>
+              <div class="tiny" style="margin-top:6px;">Models are typed, not auto-listed. Example: <b>mistralai/devstral-2512:free</b></div>
+              <div class="row2" style="margin-top:10px;">
+                <input id="c_or_model" placeholder="Chat model (OpenRouter) e.g. mistralai/devstral-2512:free" />
+                <input id="c_or_gate" placeholder="Gate model (OpenRouter) optional (leave blank = use gate dropdown or same as chat)" />
+              </div>
+              <div class="row" style="margin-top:10px;">
+                <input id="or_key" type="password" placeholder="OpenRouter API key" style="flex:1" />
+                <button class="btn" id="or_save">Save</button>
+                <button class="btn" id="or_clear">Clear</button>
+              </div>
+              <div class="tiny" style="margin-top:6px;">Tip: Use a <b>Read-only / restricted</b> key if possible.</div>
+              <div class="tiny" style="margin-top:8px;">
+                Add your <b>OpenRouter API key</b> here (stored locally in this browser only).
+              </div>
+              <div class="tiny" id="openrouterStatus" style="margin-top:8px;"></div>
+            </div>
+            <div class="card" id="puterCard" style="margin-top:10px; display:none;">
+              <div style="font-weight:900">Puter</div>
+              <div class="tiny" style="margin-top:6px;">Models are typed, not auto-listed. Example: <b>auto</b></div>
+              <div class="row2" style="margin-top:10px;">
+                <input id="c_puter_model" placeholder="Chat model (Puter) optional" />
+                <input id="c_puter_gate" placeholder="Gate model (Puter) optional (leave blank = use gate dropdown or same as chat)" />
+              </div>
+              <div class="tiny" style="margin-top:8px;">
+                Tip: Set <b>PUTER_BASE_URL</b> or <b>PUTER_API_KEY</b> on the server if needed.
+              </div>
+              <div class="tiny" id="puterStatus" style="margin-top:8px;"></div>
+            </div>
+            <div class="row2" style="margin-top:10px;">
+              <input id="c_color" placeholder='Profile color (e.g. #5865F2) optional' />
+              <input id="c_interval" type="number" min="3" max="120" value="30" placeholder="Gate interval seconds" />
+            </div>
+
+            <textarea id="c_sys" placeholder="System prompt" style="margin-top:10px;"></textarea>
+
+            <div class="row" style="margin-top:10px; justify-content:space-between;">
+              <div class="row" style="gap:10px;">
+                <label class="tiny"><input type="checkbox" id="c_humanize" /> human-like pacing</label>
+              </div>
+              <button class="btn primary" id="createChar">Add</button>
+            </div>
+
+            <div class="tiny" style="margin-top:10px;">
+              Pick OpenRouter or Puter above. For OpenRouter, paste the model name (e.g. <b>openai/gpt-4o-mini</b>).
+            </div>
+          </div>
+        </details>
+
+        <details style="margin-top:12px;">
+          <summary class="tiny">Dev</summary>
+          <div class="toggle">
+            <div>
+              <label>Dev Feed</label>
+              <div class="sub">Gate decisions, prompt previews, draft replies (optional)</div>
+            </div>
+            <input type="checkbox" id="devToggle"/>
+          </div>
+          <div class="toggle">
+            <div>
+              <label>Pause all AI calls</label>
+              <div class="sub">Stop all LLM requests until resumed</div>
+            </div>
+            <input type="checkbox" id="devPauseAll"/>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- Chat -->
+    <div class="chatCol">
+      <div class="topbar">
+        <div class="topLeft">
+          <div class="chanTitle">
+            <span class="hash">#</span>
+            <span class="name" id="activeTitle">—</span>
+          </div>
+          <div class="meta" id="activeMeta"></div>
+        </div>
+
+        <div class="actions">
+          <div class="searchBox" title="Search messages">
+            🔎 <input id="searchInput" placeholder="Search" />
+            <span class="kbd">Enter</span>
+          </div>
+          <button class="btnIcon" id="btnPins" title="Pins">📌</button>
+          <button class="btnIcon" id="btnMembers" title="Toggle Members">👥</button>
+        </div>
+      </div>
+
+      <div class="chatScroll" id="chat">
+        <div class="welcome" id="welcomeBox">
+          Welcome to <b>#general</b> — this chat behaves like a Discord channel.<br/>
+          Most extra features are optional and controlled in <b>Settings</b>.
+        </div>
+        <div class="welcome" id="orKeyNotice" style="display:none;">
+          Paste in API key in Settings.
+        </div>
+      </div>
+
+      <div class="composer">
+        <div class="replyBar" id="replyBar">
+          <div class="row" style="gap:10px; width:100%;">
+            <div id="replyText" style="min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></div>
+            <button class="x" id="cancelReply" title="Cancel reply">✕</button>
+          </div>
+        </div>
+
+        <div class="usernameRow">
+          <div class="label">Username</div>
+          <input id="usernameQuick" class="usernameInput" placeholder="Your name (e.g. Tarno)" />
+        </div>
+
+        <div class="composerRow">
+          <button class="btnIcon" id="btnEmoji" title="Quick reactions">😀</button>
+          <div class="msgInput" id="msg" contenteditable="true" data-placeholder="Message #channel"></div>
+          <button class="sendBtn" id="send" title="Send">➤</button>
+        </div>
+        <div class="tiny" id="typingLine" style="margin-top:8px;"></div>
+        <div class="tiny" style="margin-top:6px;">Made by techbrology</div>
+      </div>
+    </div>
+
+    <!-- Right panel -->
+    <div class="right" id="rightPanel">
+      <div class="rightTabs">
+        <div class="tab active" data-tab="members" id="tabMembers">Members</div>
+        <div class="tab" data-tab="pins" id="tabPins">Pins</div>
+        <div class="tab" data-tab="dev" id="tabDev">Dev</div>
+        <div style="flex:1"></div>
+        <span class="pill" id="connStatus">offline</span>
+      </div>
+
+      <div class="rightScroll" id="rightBody"></div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div class="modalBack" id="settingsBack">
+    <div class="modal">
+      <div class="modalHead">
+        <div style="font-weight:900">Settings</div>
+        <button class="closeX" id="closeSettings">✕</button>
+      </div>
+      <div class="modalBody">
+        <div class="toggle">
+          <div>
+            <label>Show members panel</label>
+            <div class="sub">Right side member list like Discord</div>
+          </div>
+          <input type="checkbox" id="s_showMembers"/>
+        </div>
+
+        <div class="toggle">
+          <div>
+            <label>Enable reactions</label>
+            <div class="sub">Emoji reacts on messages (local)</div>
+          </div>
+          <input type="checkbox" id="s_reactions"/>
+        </div>
+
+        <div class="toggle">
+          <div>
+            <label>Enable message editing</label>
+            <div class="sub">Edit your own messages (local)</div>
+          </div>
+          <input type="checkbox" id="s_editing"/>
+        </div>
+
+        <div class="toggle">
+          <div>
+            <label>Enable pinning</label>
+            <div class="sub">Pin messages + pins tab (local)</div>
+          </div>
+          <input type="checkbox" id="s_pins"/>
+        </div>
+
+        <div class="toggle">
+          <div>
+            <label>Enable replying</label>
+            <div class="sub">Reply-to a message (quote preview)</div>
+          </div>
+          <input type="checkbox" id="s_reply"/>
+        </div>
+
+        <div class="toggle">
+          <div>
+            <label>Safe markdown</label>
+            <div class="sub">**bold**, *italics*, `code` (no links/HTML)</div>
+          </div>
+          <input type="checkbox" id="s_markdown"/>
+        </div>
+
+        <div class="toggle">
+          <div>
+            <label>Sounds</label>
+            <div class="sub">Play a tiny sound on new messages</div>
+          </div>
+          <input type="checkbox" id="s_sounds"/>
+        </div>
+
+        <div class="toggle">
+          <div>
+            <label>Desktop notifications</label>
+            <div class="sub">Browser notifications for new messages</div>
+          </div>
+          <input type="checkbox" id="s_notify"/>
+        </div>
+
+        <div class="toggle">
+          <div>
+            <label>Compact mode</label>
+            <div class="sub">Tighter message spacing</div>
+          </div>
+          <input type="checkbox" id="s_compact"/>
+        </div>
+
+        <div class="toggle">
+          <div>
+            <label>Show timestamps</label>
+            <div class="sub">Show per-message time</div>
+          </div>
+          <input type="checkbox" id="s_time"/>
+        </div>
+
+        <div class="toggle">
+          <div>
+            <label>Show avatars</label>
+            <div class="sub">Display avatars beside messages</div>
+          </div>
+          <input type="checkbox" id="s_avatars"/>
+        </div>
+
+        <div class="toggle">
+          <div>
+            <label>Enter to send</label>
+            <div class="sub">Shift+Enter makes a new line</div>
+          </div>
+          <input type="checkbox" id="s_enterSend"/>
+        </div>
+
+        <div class="card" style="margin-top:12px;">
+          <div style="font-weight:900">Username (AI context)</div>
+          <div class="tiny" style="margin-top:6px;">Used in the AI prompt as <b>Name:</b></div>
+          <input id="s_username" placeholder="Your name (e.g. Tarno)" style="margin-top:10px;" />
+        </div>
+
+        <div class="card" style="margin-top:12px; display:none;">          <div style="font-weight:900">Ollama Auto-Start</div>
+          <div class="tiny" style="margin-top:6px;">Controls when the server tries to start Ollama.</div>
+          <select id="s_ollama_start" style="display:none" style="margin-top:10px;">
+            <option value="always">Always</option>
+            <option value="on_demand">On-demand (only when needed)</option>
+            <option value="never">Never</option>
+          </select>
+        </div>
+
+        <div class="card" style="margin-top:12px;">
+          <div style="font-weight:900">OpenRouter API key</div>
+          <div class="tiny" style="margin-top:6px;">Stored locally in this browser only.</div>
+          <div class="row" style="margin-top:10px;">
+            <input id="s_or_key" type="password" placeholder="OpenRouter API key" style="flex:1" />
+            <button class="btn" id="s_or_save">Save</button>
+            <button class="btn" id="s_or_clear">Clear</button>
+          </div>
+          <div class="tiny" id="s_or_status" style="margin-top:8px;"></div>
+        </div>
+
+        <div class="card" style="margin-top:12px;">
+          <div style="font-weight:900">Quick tips</div>
+          <div class="tiny" style="margin-top:8px;">
+            • Reply by hovering a message and clicking ↩︎ (if enabled)<br/>
+            • React by hovering a message and clicking 😀 (if enabled)<br/>
+            • Search with the box in the top bar (Enter)<br/>
+            • Pins show in the right panel (if enabled)
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Profile Modal -->
+  <div class="modalBack" id="profileBack">
+    <div class="modal">
+      <div class="modalHead">
+        <div style="font-weight:900">AI Profile</div>
+        <button class="closeX" id="closeProfile">X</button>
+      </div>
+      <div class="modalBody">
+        <div class="profileGrid">
+          <input id="p_name" placeholder="Name" />
+          <input id="p_about" placeholder="About" />
+          <select id="p_provider">
+            <option value="openrouter">OpenRouter (cloud)</option>
+            <option value="puter">Puter (free)</option>
+          </select>
+          <input id="p_model" placeholder="Chat model" />
+          <select id="p_gate_provider">
+            <option value="openrouter">Gate: OpenRouter (cloud)</option>
+            <option value="puter">Gate: Puter (free)</option>
+          </select>
+          <input id="p_gate_model" placeholder="Gate model" />
+          <input id="p_interval" type="number" min="3" max="120" placeholder="Gate interval seconds" />
+          <input id="p_color" placeholder="Profile color (e.g. #5865F2)" />
+          <label class="tiny"><input type="checkbox" id="p_enabled" /> enabled</label>
+          <textarea id="p_sys" class="full" placeholder="System prompt"></textarea>
+        </div>
+
+        <div class="card" style="margin-top:12px;">
+          <div style="font-weight:900">Servers</div>
+          <div class="tiny" style="margin-top:6px;">Choose which servers (channels) this AI is in.</div>
+          <div id="profileConversations" style="margin-top:8px;"></div>
+        </div>
+
+        <div class="row" style="margin-top:12px; justify-content:flex-end;">
+          <button class="btn" id="saveProfile">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Emoji Modal -->
+  <div class="modalBack" id="emojiBack">
+    <div class="modal" style="width:min(520px, 100%);">
+      <div class="modalHead">
+        <div style="font-weight:900">Quick Emoji</div>
+        <button class="closeX" id="closeEmoji">✕</button>
+      </div>
+      <div class="modalBody">
+        <div class="tiny">Click an emoji to add it as a reaction to the selected message.</div>
+        <div id="emojiGrid" style="display:flex; flex-wrap:wrap; gap:10px; margin-top:12px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://js.puter.com/v2/"></script>
+  <script>
+    const API = ""; // same-origin
+
+    // -------------------------
+    // Settings (all optional)
+    // -------------------------
+    const DEFAULT_SETTINGS = {
+      showMembers: true,
+      enableReactions: true,
+      enableEditing: true,
+      enablePins: true,
+      enableReply: true,
+      safeMarkdown: true,
+      sounds: false,
+      notify: false,
+      compact: false,
+      showTime: true,
+      showAvatars: true,
+      enterToSend: true,
+      username: "User"
+    };
+
+    function loadSettings(){
+      try{
+        const raw = localStorage.getItem("ai2026_settings");
+        const obj = raw ? JSON.parse(raw) : {};
+        return {...DEFAULT_SETTINGS, ...obj};
+      } catch {
+        return {...DEFAULT_SETTINGS};
+      }
+    }
+    function saveSettings(s){
+      localStorage.setItem("ai2026_settings", JSON.stringify(s));
+    }
+
+    let settings = loadSettings();
+
+    // -------------------------
+    // State
+    // -------------------------
+    let activeConversationId = null;
+    let ws = null;
+
+    let charactersById = {};
+    let conversationsById = {};
+    let members = []; // presence payload
+    let typing = {};  // char_id -> bool
+
+    let messagesById = {}; // id -> message
+    let messageEls = {};   // id -> dom element
+    let replyToId = null;
+
+    let devEnabled = false;
+    let llmProviderDefault = "openrouter";
+    let openrouterDefaultModel = "mistralai/devstral-2512:free";
+    let openrouterConfigured = false;
+    let puterDefaultModel = "";
+    let puterConfigured = true;
+    let devPaused = false;
+    let pauseAllCalls = false;
+    let activeProfileId = null;
+    let ollamaStartMode = "on_demand";
+
+    let activeRightTab = "members";
+
+    // for emoji modal
+    const QUICK_EMOJI = ["😀","😂","🔥","❤️","👍","👀","😮","🤔","👏","💯","🎉","🧠","💀","😅","🙌","✅"];
+    let emojiTargetMsgId = null;
+
+    const el = (id) => document.getElementById(id);
+    const JSON_HEADERS = {"Content-Type":"application/json"};
+
+    // -------------------------
+    // Utilities
+    // -------------------------
+    function safeJsonParse(text){
+      if (!text) return null;
+      try { return JSON.parse(text); } catch { return null; }
+    }
+
+    function formatError(err){
+      if (!err) return '';
+      if (typeof err === 'string') return err;
+      if (err instanceof Error){
+        if (err.stack) return err.stack;
+        const name = err.name || 'Error';
+        const msg = err.message || String(err);
+        return name && name !== msg ? `${name}: ${msg}` : msg;
+      }
+      if (typeof err === 'object'){
+        if (typeof err.message === 'string') return err.message;
+        if (typeof err.error === 'string') return err.error;
+        if (typeof err.statusText === 'string') return err.statusText;
+        try { return JSON.stringify(err, null, 2); } catch { return String(err); }
+      }
+      try { return String(err); } catch { return ''; }
+    }
+
+
+    // -------------------------
+    // Standalone storage + local API
+    // -------------------------
+    const LS_STATE = "ai2026_state_v1";
+    const LS_OR_KEY = "ai2026_openrouter_key";
+    const LS_OR_REFERER = "ai2026_openrouter_referer";
+    const LS_OR_TITLE = "ai2026_openrouter_title";
+
+    let STATE = null;
+
+    function uuid(){
+      if (crypto && crypto.randomUUID) return crypto.randomUUID();
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = (Math.random()*16)|0; const v = c==='x'?r:(r&0x3|0x8);
+        return v.toString(16);
+      });
+    }
+
+    function nowTs(){ return Date.now()/1000; }
+
+    function loadState(){
+      const raw = localStorage.getItem(LS_STATE);
+      const data = safeJsonParse(raw);
+      if (data && data.version === 1) return data;
+      return {
+        version: 1,
+        ts: nowTs(),
+        user_profile: { username: settings.username || "User" },
+        settings: {},
+        characters: [],
+        conversations: [],
+        messages: {}
+      };
+    }
+
+    function saveState(){
+      if (!STATE) return;
+      STATE.ts = nowTs();
+      localStorage.setItem(LS_STATE, JSON.stringify(STATE));
+    }
+
+    function getOpenRouterKey(){
+      return (localStorage.getItem(LS_OR_KEY) || '').trim();
+    }
+
+    function setOpenRouterKey(key){
+      const k = (key || '').trim();
+      if (k) localStorage.setItem(LS_OR_KEY, k);
+      else localStorage.removeItem(LS_OR_KEY);
+      openrouterConfigured = !!k;
+      llmProviderDefault = 'openrouter';
+      updateProviderUI();
+      loadHealth();
+    }
+
+    function migrateProviders(){
+      const fallback = 'openrouter';
+      for (const c of (STATE.characters || [])){
+        if (c.provider === 'ollama') c.provider = fallback;
+        if (c.gate_provider === 'ollama') c.gate_provider = fallback;
+      }
+    }
+
+    function ensureDefaults(){
+      if (!STATE) STATE = loadState();
+      if (!Array.isArray(STATE.characters)) STATE.characters = [];
+      if (!Array.isArray(STATE.conversations)) STATE.conversations = [];
+      if (!STATE.messages || typeof STATE.messages !== 'object') STATE.messages = {};
+      migrateProviders();
+
+      if (STATE.characters.length === 0){
+        const provider = 'openrouter';
+        STATE.characters.push({
+          id: uuid(),
+          name: 'Nova',
+          provider,
+          model: provider==='openrouter' ? openrouterDefaultModel : (puterDefaultModel || ''),
+          system_prompt: 'You are Nova. Friendly, helpful, and concise. Reply like a real person in a group chat.',
+          gate_provider: provider,
+          gate_model: provider==='openrouter' ? openrouterDefaultModel : (puterDefaultModel || ''),
+          gate_interval_seconds: 30,
+          enabled: true,
+          about: 'Default AI',
+          profile_color: '#5865F2',
+          idle_after_seconds: 180,
+          humanize_pacing: false,
+        });
+      }
+
+      if (STATE.conversations.length === 0){
+        const cid = uuid();
+        STATE.conversations.push({ id: cid, title: 'general', character_ids: [STATE.characters[0].id] });
+        STATE.messages[cid] = [];
+      }
+
+      for (const conv of STATE.conversations){
+        if (!STATE.messages[conv.id]) STATE.messages[conv.id] = [];
+      }
+
+      STATE.user_profile = STATE.user_profile || { username: settings.username || 'User' };
+      saveState();
+    }
+
+    async function openRouterChat(model, messages, temperature){
+      const key = getOpenRouterKey();
+      if (!key) throw new Error('Missing OpenRouter API key');
+      const referer = (localStorage.getItem(LS_OR_REFERER) || location.origin).trim();
+      const title = (localStorage.getItem(LS_OR_TITLE) || 'AI 2026 Chat').trim();
+      const payload = {
+        model: model || openrouterDefaultModel,
+        messages,
+        temperature: (temperature != null ? temperature : 1)
+      };
+      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${key}`,
+          'HTTP-Referer': referer,
+          'X-Title': title,
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok){
+        const err = data?.error?.message || data?.error || res.statusText;
+        throw new Error(err);
+      }
+      return (data?.choices?.[0]?.message?.content || '').toString();
+    }
+
+    function extractPuterText(resp){
+      if (!resp) return '';
+      if (typeof resp === 'string') return resp;
+      if (typeof resp.text === 'string') return resp.text;
+      const msg = resp.message || resp;
+      if (typeof msg.text === 'string') return msg.text;
+      if (typeof resp.output === 'string') return resp.output;
+      const c = msg.content;
+      if (typeof c === 'string') return c;
+      if (Array.isArray(c)){
+        const parts = c.map(x => {
+          if (!x) return '';
+          if (typeof x === 'string') return x;
+          if (typeof x.text === 'string') return x.text;
+          if (typeof x.content === 'string') return x.content;
+          if (x.message && typeof x.message.content === 'string') return x.message.content;
+          if (x.output && typeof x.output === 'string') return x.output;
+          try{
+            if (typeof x === 'object') return JSON.stringify(x, null, 2);
+          } catch {}
+          return '';
+        }).join('');
+        if (parts.trim()) return parts;
+      }
+      try{
+        if (c && typeof c === 'object') return JSON.stringify(c, null, 2);
+        if (msg && typeof msg === 'object') return JSON.stringify(msg, null, 2);
+        return JSON.stringify(resp, null, 2);
+      } catch {
+        return '';
+      }
+    }
+
+    async function puterChat(model, messages, temperature){
+      if (typeof puter === 'undefined' || !puter.ai || !puter.ai.chat){
+        throw new Error('Puter.js not available');
+      }
+      const opts = {};
+      if (model) opts.model = model;
+      if (temperature != null) opts.temperature = temperature;
+      const resp = await puter.ai.chat(messages, opts);
+      return extractPuterText(resp);
+    }
+
+    async function llmChat({provider, model, messages, temperature}){
+      if (pauseAllCalls) throw new Error('Paused');
+      const p = (provider || 'openrouter').toLowerCase();
+      if (p === 'puter') return await puterChat(model, messages, temperature);
+      return await openRouterChat(model, messages, temperature);
+    }
+
+    // In-memory runtime trackers (not persisted)
+    const LAST_GATE_CHECK = {};      // convId -> {charId: ts}
+    const CHAR_BUSY = {};            // charId -> bool
+    const LAST_RESPONDED_TO = {};    // convId -> {charId: ts}
+    const LAST_IDLE_NUDGE = {};      // convId -> {charId: ts}
+    const CHAR_LAST_ACTIVE = {};     // charId -> ts
+
+    const IDLE_NUDGE_SECONDS = 300;
+    const MIN_SECONDS_BETWEEN_CHARACTER_MESSAGES = 2.0;
+    const MAX_AUTO_MESSAGES_PER_MINUTE = 12;
+
+    function latestMessageTs(convId){
+      const msgs = STATE.messages[convId] || [];
+      if (!msgs.length) return 0;
+      return Number(msgs[msgs.length-1].ts || 0) || 0;
+    }
+
+    function latestNonSelfMessageTs(convId, charId){
+      const msgs = STATE.messages[convId] || [];
+      for (let i=msgs.length-1; i>=0; i--){
+        const m = msgs[i];
+        if (!(m.author_type==='character' && m.author_id===charId)) return Number(m.ts||0)||0;
+      }
+      return 0;
+    }
+
+    function lastMessageByCharacter(convId, charId){
+      const msgs = STATE.messages[convId] || [];
+      for (let i=msgs.length-1; i>=0; i--){
+        const m = msgs[i];
+        if (m.author_type==='character' && m.author_id===charId) return (m.content||'');
+      }
+      return '';
+    }
+
+    function resolveUserDisplay(authorId){
+      if (authorId && authorId !== 'user') return authorId;
+      return (settings.username || 'User').trim() || 'User';
+    }
+
+    function participantNames(convId){
+      const conv = conversationsById[convId];
+      if (!conv) return [];
+      return (conv.character_ids||[]).map(id => charactersById[id]?.name || 'Character');
+    }
+
+    function buildTranscript(convId, max=120){
+      const msgs = (STATE.messages[convId] || []).slice(-max);
+      const lines = [];
+      for (const m of msgs){
+        const name = (m.author_type==='user') ? resolveUserDisplay(m.author_id) : (charactersById[m.author_id]?.name || 'Character');
+        const text = (m.content||'').replace(/\s+/g,' ').trim();
+        if (!text) continue;
+        lines.push(`${name}: ${text}`);
+      }
+      return lines.join('\n') || '(no messages)';
+    }
+
+    function buildContextForCharacter(convId, character){
+      const idle_s = Math.max(0, Math.floor(nowTs() - latestMessageTs(convId)));
+      const participants_line = participantNames(convId).join(', ') || '(none)';
+      const transcript = buildTranscript(convId, 80);
+
+      const msgs = STATE.messages[convId] || [];
+      const last = msgs.length ? msgs[msgs.length-1] : null;
+      let followup_hint = '';
+      if (last && last.author_type==='character' && last.author_id===character.id){
+        followup_hint = "- You already spoke in the most recent message.\n- Do NOT repeat any sentence from your last message.\n- Continue with new information or a new question only.\n";
+      }
+
+      const system = (
+        `${character.system_prompt}\n\n`+
+        `You are '${character.name}' in a group chat.\n`+
+        `Participants (AI): ${participants_line}\n`+
+        `Time since last message: ${idle_s} seconds.\n`+
+        `Rules:\n`+
+        `- Speak only as ${character.name}.\n`+
+        `- Do not output meta/debug/gating decisions.\n`+
+        `- Never repeat a previous message verbatim. Speak like a Discord user, and be concise. Speak like a real human\n`+
+        `${followup_hint}`+
+        `make your responses short and concise and limit emoji use. Do not use italics and do not narrate your actions. Type in a style someone on a live chat would use\n`+
+        `transcription of the chat:\n${transcript}\n`
+      );
+      return [{role:'system', content: system}];
+    }
+
+    function autoRateLimited(convId, windowS=60){
+      const now = nowTs();
+      const msgs = STATE.messages[convId] || [];
+      const recent = msgs.filter(m => m.author_type==='character' && (now - (m.ts||0)) <= windowS);
+      return recent.length >= Math.max(1, MAX_AUTO_MESSAGES_PER_MINUTE);
+    }
+
+    function gatePrompt(convId, character){
+      const transcript = buildTranscript(convId, 60);
+      const idle_s = Math.max(0, Math.floor(nowTs() - latestMessageTs(convId)));
+      return (
+`You are the gatekeeper for an AI character in a Discord-like group chat.
+Decide whether the character should send a message RIGHT NOW.
+
+Character:
+- Name: ${character.name}
+- System prompt: ${character.system_prompt}
+
+Conversation context:
+- Participants (AI): ${participantNames(convId).join(', ') || '(none)'}
+- Time since last message: ${idle_s} seconds
+
+Rules:
+- Output ONLY one word: YES or NO.
+- Say YES if the character should respond now.
+- Say NO if the character should stay silent.
+- Only one character should respond at a time.
+- If the last message was sent by ${character.name}, usually say NO unless a follow-up is clearly needed.
+- If chat has been idle for ${IDLE_NUDGE_SECONDS} seconds or more, you CAN reply to keep the chat going.
+- Be conservative; avoid spamming.
+
+Chat transcript (most recent last):
+${transcript}
+`);
+    }
+
+    function normText(s){
+      return (s||'').toLowerCase().replace(/\s+/g,' ').trim();
+    }
+
+    async function judgeShouldRespond(convId, character){
+      const charId = character.id;
+      if (!character.enabled) return false;
+      if (pauseAllCalls) return false;
+
+      const responded_to_ts = latestNonSelfMessageTs(convId, charId);
+      const latest_ts = latestMessageTs(convId);
+      const last_handled = (LAST_RESPONDED_TO[convId]||{})[charId] || 0;
+      const idle_s = latest_ts ? Math.max(0, nowTs() - latest_ts) : 0;
+      const last_idle = (LAST_IDLE_NUDGE[convId]||{})[charId] || 0;
+      const idle_nudge = (IDLE_NUDGE_SECONDS > 0) && (latest_ts>0) && (idle_s>=IDLE_NUDGE_SECONDS) && (responded_to_ts<=last_handled) && (last_idle<=last_handled);
+
+      if (responded_to_ts <= last_handled && !idle_nudge){
+        return false;
+      }
+
+      if (autoRateLimited(convId)){
+        if (devEnabled) addDevEvent({ts: nowTs(), stage:'info', data:{note:'rate_limited', limit_per_min: MAX_AUTO_MESSAGES_PER_MINUTE}});
+        return false;
+      }
+
+      if (devEnabled){
+        addDevEvent({ts: nowTs(), stage:'gate_check_start', data:{character:{id: charId, name: character.name}, gate_provider: character.gate_provider, gate_provider_label: character.gate_provider, gate_model: character.gate_model, interval_s: character.gate_interval_seconds}});
+      }
+
+      let decision_raw = '';
+      let respond = false;
+      try{
+        const prompt = gatePrompt(convId, character);
+        const out = await llmChat({provider: character.gate_provider, model: character.gate_model, messages:[{role:'system', content: prompt}], temperature: 0.1});
+        decision_raw = (out||'').trim();
+        const lines = decision_raw.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+        let yes=0, no=0;
+        for (const line of lines){
+          if (/^YES\b/i.test(line)) yes++;
+          if (/^NO\b/i.test(line)) no++;
+        }
+        if (lines.length===1 && yes===0 && no===0){
+          if (/YES/i.test(lines[0])) yes = 1;
+          if (/NO/i.test(lines[0])) no = 1;
+        }
+        respond = yes>no;
+      } catch (e){
+        const msgs = STATE.messages[convId] || [];
+        const last = msgs.length ? msgs[msgs.length-1] : null;
+        respond = !!(last && last.author_type==='user');
+        decision_raw = `ERROR: ${formatError(e)}`;
+      }
+
+      if (devEnabled){
+        addDevEvent({ts: nowTs(), stage:'gate_result', data:{character:{id: charId, name: character.name}, respond, decision: respond?'YES':'NO', yes_count: respond?1:0, no_count: respond?0:1, raw: decision_raw}});
+      }
+
+      if (respond){
+        if (!LAST_RESPONDED_TO[convId]) LAST_RESPONDED_TO[convId] = {};
+        LAST_RESPONDED_TO[convId][charId] = responded_to_ts;
+        if (idle_nudge){
+          if (!LAST_IDLE_NUDGE[convId]) LAST_IDLE_NUDGE[convId] = {};
+          LAST_IDLE_NUDGE[convId][charId] = responded_to_ts;
+        }
+      }
+
+      return respond;
+    }
+
+    async function maybeHumanizeDelay(character, reply){
+      if (!character.humanize_pacing) return;
+      const pre = Math.random() * (0.55-0.15) + 0.15;
+      const per = Math.random() * (0.022-0.010) + 0.010;
+      const t = Math.min(Math.max(pre + (reply.length * per), 0.4), 4.0);
+      await new Promise(r => setTimeout(r, t*1000));
+    }
+
+    async function characterRespond(convId, character){
+      const charId = character.id;
+      if (CHAR_BUSY[charId]) return;
+      if (pauseAllCalls) return;
+
+      const last_active = Number(CHAR_LAST_ACTIVE[charId]||0) || 0;
+      if (last_active && (nowTs() - last_active) < MIN_SECONDS_BETWEEN_CHARACTER_MESSAGES){
+        if (devEnabled) addDevEvent({ts: nowTs(), stage:'info', data:{character:{id:charId,name:character.name}, note:'generate_skip_cooldown', cooldown_s: MIN_SECONDS_BETWEEN_CHARACTER_MESSAGES}});
+        return;
+      }
+
+      CHAR_BUSY[charId] = true;
+      typing[charId] = true;
+      renderTypingLine();
+
+      try{
+        if (devEnabled) addDevEvent({ts: nowTs(), stage:'generate_start', data:{character:{id:charId,name:character.name}, provider: character.provider, provider_label: character.provider, model: character.model}});
+
+        const ctx = buildContextForCharacter(convId, character);
+        if (devEnabled){
+          const preview = ctx.slice(-1).map(x => `${x.role}: ${String(x.content).slice(0,900)}`).join('\n');
+          addDevEvent({ts: nowTs(), stage:'chat_prompt_preview', data:{character:{id:charId,name:character.name}, provider: character.provider, provider_label: character.provider, model: character.model, preview}});
+        }
+
+        let reply = (await llmChat({provider: character.provider, model: character.model, messages: ctx, temperature: 1})).trim();
+        if (!reply) return;
+
+        const last_self = lastMessageByCharacter(convId, charId);
+        if (last_self && normText(reply) === normText(last_self)){
+          if (devEnabled) addDevEvent({ts: nowTs(), stage:'warn', data:{character:{id:charId,name:character.name}, note:'duplicate_reply_retry'}});
+          const ctx2 = ctx.concat([{role:'system', content:'Do NOT repeat your previous message. Say something new, or ask a fresh question. Avoid reusing the same first sentence.'}]);
+          const reply2 = (await llmChat({provider: character.provider, model: character.model, messages: ctx2, temperature: 2})).trim();
+          if (reply2 && normText(reply2) !== normText(last_self)) reply = reply2;
+          else {
+            if (devEnabled) addDevEvent({ts: nowTs(), stage:'warn', data:{character:{id:charId,name:character.name}, note:'duplicate_reply_suppressed'}});
+            return;
+          }
+        }
+
+        if (devEnabled) addDevEvent({ts: nowTs(), stage:'draft_reply', data:{character:{id:charId,name:character.name}, reply}});
+
+        await maybeHumanizeDelay(character, reply);
+
+        const msg = {
+          id: uuid(),
+          conversation_id: convId,
+          author_type: 'character',
+          author_id: charId,
+          content: reply,
+          ts: nowTs(),
+          edited_ts: null,
+          reactions: {},
+          pinned: false,
+          reply_to: null
+        };
+
+        STATE.messages[convId].push(msg);
+        CHAR_LAST_ACTIVE[charId] = msg.ts;
+        saveState();
+
+        if (convId === activeConversationId){
+          addMessage(msg);
+        }
+
+        if (devEnabled) addDevEvent({ts: nowTs(), stage:'message_committed', data:{character:{id:charId,name:character.name}, message_id: msg.id}});
+        playPing();
+        maybeNotify(character.name, reply);
+
+      } catch (e){
+        if (devEnabled) addDevEvent({ts: nowTs(), stage:'error', data:{character:{id:charId,name:character.name}, error: formatError(e)}});
+      } finally {
+        typing[charId] = false;
+        renderTypingLine();
+        CHAR_BUSY[charId] = false;
+      }
+    }
+
+    let gateLoopRunning = false;
+    async function gateTick(){
+      if (gateLoopRunning) return;
+      if (!STATE) return;
+      gateLoopRunning = true;
+      try{
+        const now = nowTs();
+        for (const conv of (STATE.conversations||[])){
+          const convId = conv.id;
+          for (const charId of (conv.character_ids||[])){
+            const character = charactersById[charId];
+            if (!character || !character.enabled) continue;
+            if (!LAST_GATE_CHECK[convId]) LAST_GATE_CHECK[convId] = {};
+            const last = LAST_GATE_CHECK[convId][charId] || 0;
+            const interval = Number(character.gate_interval_seconds||30) || 30;
+            if ((now - last) < interval) continue;
+            LAST_GATE_CHECK[convId][charId] = now;
+
+            const should = await judgeShouldRespond(convId, character);
+            if (should){
+              await characterRespond(convId, character);
+            }
+          }
+        }
+      } finally {
+        gateLoopRunning = false;
+      }
+    }
+
+    function computeMembers(convId){
+      const conv = conversationsById[convId];
+      if (!conv) return [];
+      const out = [];
+      const now = nowTs();
+      for (const id of (conv.character_ids||[])){
+        const c = charactersById[id];
+        if (!c) continue;
+        let st = 'offline';
+        if (!c.enabled) st = 'offline';
+        else if (typing[id]) st = 'typing';
+        else {
+          const last = Number(CHAR_LAST_ACTIVE[id]||0) || 0;
+          const idleAfter = Number(c.idle_after_seconds||180) || 180;
+          st = (last && (now-last) > idleAfter) ? 'idle' : 'online';
+        }
+        out.push({id:c.id, name:c.name, about:c.about||'', profile_color:c.profile_color||'', status: st});
+      }
+      return out;
+    }
+
+    function presenceTick(){
+      if (!activeConversationId) return;
+      members = computeMembers(activeConversationId);
+      el('memberCount').textContent = `${members.length}`;
+      if (activeRightTab === 'members') renderRightPanel();
+    }
+
+    async function localApiRouter(path, method, body){
+      ensureDefaults();
+
+      openrouterConfigured = !!getOpenRouterKey();
+      puterConfigured = !!(typeof puter !== 'undefined');
+      llmProviderDefault = 'openrouter';
+
+      const u = new URL(path, location.origin);
+      const pathname = u.pathname;
+
+      // Health
+      if (pathname === '/health' && method === 'GET'){
+        return {
+          ok: true,
+          openrouter_configured: openrouterConfigured,
+          puter_configured: puterConfigured,
+          ollama_up: false,
+          llm_provider_default: llmProviderDefault,
+          defaults: {
+            openrouter_default_model: openrouterDefaultModel,
+            puter_default_model: puterDefaultModel,
+          }
+        };
+      }
+
+      // Pause toggle
+      if (pathname === '/debug/pause'){
+        if (method === 'GET') return {enabled: !!pauseAllCalls};
+        if (method === 'POST'){
+          pauseAllCalls = !!(body && body.enabled);
+          return {enabled: pauseAllCalls};
+        }
+      }
+
+      // User profile
+      if (pathname === '/user/profile' && method === 'POST'){
+        const username = (body && body.username) ? String(body.username) : (settings.username||'User');
+        STATE.user_profile = { username };
+        saveState();
+        return {ok:true};
+      }
+
+      // Ollama start mode (compat)
+      if (pathname === '/settings/ollama_start'){
+        return {mode: 'never'};
+      }
+
+      // Ollama model list (compat)
+      if (pathname === '/ollama/models' && method === 'GET'){
+        return {ok:false, models: []};
+      }
+
+      // Characters
+      if (pathname === '/characters' && method === 'GET'){
+        return STATE.characters || [];
+      }
+
+      if (pathname === '/characters' && method === 'POST'){
+        const c = body || {};
+        const cid = uuid();
+        let provider = String(c.provider || llmProviderDefault).toLowerCase();
+        let gate_provider = String(c.gate_provider || provider).toLowerCase();
+        if (!['openrouter','puter'].includes(provider)) provider = llmProviderDefault;
+        if (!['openrouter','puter'].includes(gate_provider)) gate_provider = provider;
+
+        const char = {
+          id: cid,
+          name: String(c.name || 'AI').trim() || 'AI',
+          provider,
+          model: String(c.model || (provider==='openrouter' ? openrouterDefaultModel : puterDefaultModel)).trim(),
+          system_prompt: String(c.system_prompt || 'You are a helpful AI.').trim(),
+          gate_provider,
+          gate_model: String(c.gate_model || (gate_provider==='openrouter' ? openrouterDefaultModel : puterDefaultModel)).trim(),
+          gate_interval_seconds: parseInt(c.gate_interval_seconds || 30, 10),
+          enabled: (c.enabled !== undefined) ? !!c.enabled : true,
+          about: String(c.about || ''),
+          profile_color: String(c.profile_color || ''),
+          idle_after_seconds: parseInt(c.idle_after_seconds || 180, 10),
+          humanize_pacing: !!c.humanize_pacing,
+        };
+
+        STATE.characters.push(char);
+        saveState();
+        await loadCharacters();
+        await loadConversations();
+        return char;
+      }
+
+      let m = pathname.match(/^\/characters\/([^/]+)$/);
+      if (m && method === 'PATCH'){
+        const cid = m[1];
+        const c = (STATE.characters || []).find(x => x.id === cid);
+        if (!c) throw new Error('Character not found');
+        const patch = body || {};
+        for (const [k,v] of Object.entries(patch)){
+          if (k === 'id') continue;
+          if (k === 'provider' || k === 'gate_provider'){
+            let vv = String(v || '').toLowerCase().trim();
+            if (!['openrouter','puter'].includes(vv)) vv = llmProviderDefault;
+            c[k] = vv;
+          } else {
+            c[k] = v;
+          }
+        }
+        saveState();
+        await loadCharacters();
+        await loadConversations();
+        return c;
+      }
+
+      // Conversations
+      if (pathname === '/conversations' && method === 'GET'){
+        return STATE.conversations || [];
+      }
+
+      if (pathname === '/conversations' && method === 'POST'){
+        const conv = body || {};
+        const cid = uuid();
+        const title = String(conv.title || 'general').trim() || 'general';
+        const char_ids = Array.isArray(conv.character_ids) ? conv.character_ids.slice() : [];
+        STATE.conversations.push({ id: cid, title, character_ids: char_ids });
+        if (!STATE.messages[cid]) STATE.messages[cid] = [];
+        saveState();
+        await loadConversations();
+        return { id: cid, title, character_ids: char_ids };
+      }
+
+      m = pathname.match(/^\/conversations\/([^/]+)$/);
+      if (m && method === 'PATCH'){
+        const cid = m[1];
+        const conv = (STATE.conversations||[]).find(x => x.id === cid);
+        if (!conv) throw new Error('Conversation not found');
+        const patch = body || {};
+        if (patch.title != null) conv.title = String(patch.title);
+        if (patch.character_ids != null && Array.isArray(patch.character_ids)) conv.character_ids = patch.character_ids.slice();
+        saveState();
+        await loadConversations();
+        return conv;
+      }
+
+      // Init payload
+      m = pathname.match(/^\/conversations\/([^/]+)\/init$/);
+      if (m && method === 'GET'){
+        const cid = m[1];
+        return { messages: STATE.messages[cid] || [], members: computeMembers(cid) };
+      }
+
+      // Messages create
+      m = pathname.match(/^\/conversations\/([^/]+)\/messages$/);
+      if (m && method === 'POST'){
+        const cid = m[1];
+        if (!STATE.messages[cid]) STATE.messages[cid] = [];
+        const payload = body || {};
+        const author_type = payload.author_type || 'user';
+        const author_id = payload.author_id || (settings.username || 'User');
+        const content = String(payload.content || '').trim();
+        if (!content) return {ok:true};
+
+        const msg = {
+          id: uuid(),
+          conversation_id: cid,
+          author_type,
+          author_id,
+          content,
+          ts: nowTs(),
+          edited_ts: null,
+          reactions: {},
+          pinned: false,
+          reply_to: payload.reply_to || null
+        };
+
+        STATE.messages[cid].push(msg);
+        if (author_type === 'character') CHAR_LAST_ACTIVE[author_id] = msg.ts;
+        saveState();
+
+        if (cid === activeConversationId){
+          addMessage(msg);
+          playPing();
+        }
+        return msg;
+      }
+
+      // Message edit
+      m = pathname.match(/^\/conversations\/([^/]+)\/messages\/([^/]+)$/);
+      if (m && method === 'PATCH'){
+        const cid = m[1];
+        const mid = m[2];
+        const msgs = STATE.messages[cid] || [];
+        const mm = msgs.find(x => x.id === mid);
+        if (!mm) throw new Error('Message not found');
+        mm.content = String((body||{}).content || '').trim();
+        mm.edited_ts = nowTs();
+        saveState();
+        if (cid === activeConversationId) updateMessage(mm);
+        return mm;
+      }
+
+      // Reactions toggle
+      m = pathname.match(/^\/conversations\/([^/]+)\/messages\/([^/]+)\/reactions$/);
+      if (m && method === 'POST'){
+        const cid = m[1];
+        const mid = m[2];
+        const emoji = (body||{}).emoji;
+        const actor_id = (body||{}).actor_id || 'user';
+        const msgs = STATE.messages[cid] || [];
+        const mm = msgs.find(x => x.id === mid);
+        if (!mm) throw new Error('Message not found');
+        const rmap = mm.reactions || {};
+        const arr = Array.isArray(rmap[emoji]) ? rmap[emoji].slice() : [];
+        const idx = arr.indexOf(actor_id);
+        if (idx >= 0) arr.splice(idx, 1); else arr.push(actor_id);
+        if (arr.length) rmap[emoji] = arr; else delete rmap[emoji];
+        mm.reactions = rmap;
+        saveState();
+        if (cid === activeConversationId) updateMessage(mm);
+        return mm;
+      }
+
+      // Pin toggle
+      m = pathname.match(/^\/conversations\/([^/]+)\/messages\/([^/]+)\/pin$/);
+      if (m && method === 'POST'){
+        const cid = m[1];
+        const mid = m[2];
+        const msgs = STATE.messages[cid] || [];
+        const mm = msgs.find(x => x.id === mid);
+        if (!mm) throw new Error('Message not found');
+        mm.pinned = !mm.pinned;
+        saveState();
+        if (cid === activeConversationId) updateMessage(mm);
+        return mm;
+      }
+
+      // Pins list
+      m = pathname.match(/^\/conversations\/([^/]+)\/pins$/);
+      if (m && method === 'GET'){
+        const cid = m[1];
+        const msgs = STATE.messages[cid] || [];
+        return msgs.filter(x => !!x.pinned);
+      }
+
+      // Search
+      m = pathname.match(/^\/conversations\/([^/]+)\/search$/);
+      if (m && method === 'GET'){
+        const cid = m[1];
+        const q = String(u.searchParams.get('q') || '').toLowerCase();
+        const limit = parseInt(String(u.searchParams.get('limit') || '50'), 10);
+        const msgs = STATE.messages[cid] || [];
+        const out = msgs.filter(x => q && String(x.content||'').toLowerCase().includes(q));
+        return out.slice(-limit);
+      }
+
+      throw new Error('Not found');
+    }
+
+    // Start loops once
+    setInterval(() => { try { gateTick(); } catch {} }, 1000);
+    setInterval(() => { try { presenceTick(); } catch {} }, 5000);
+
+    async function apiJson(path, {method="GET", body} = {}){
+      // Standalone in-browser API router (no backend)
+      return await localApiRouter(path, method, body);
+    }
+
+    async function apiSend(path, body, method="POST"){
+      try{
+        return await apiJson(path, {method, body});
+      } catch {
+        return null;
+      }
+    }
+
+    async function loadPauseState(){
+      try{
+        const res = await apiJson("/debug/pause");
+        pauseAllCalls = !!res.enabled;
+        if (el("devPauseAll")) el("devPauseAll").checked = pauseAllCalls;
+      } catch {}
+    }
+
+    async function loadOllamaStartMode(){
+      try{
+        const res = await apiJson("/settings/ollama_start");
+        ollamaStartMode = res.mode || "on_demand";
+        if (el("s_ollama_start")) el("s_ollama_start").value = ollamaStartMode;
+      } catch {}
+    }
+
+    function setOllamaStartMode(mode){
+      ollamaStartMode = mode || "on_demand";
+      if (el("s_ollama_start")) el("s_ollama_start").value = ollamaStartMode;
+      apiSend("/settings/ollama_start", {mode: ollamaStartMode});
+    }
+
+    function setPauseAllCalls(on){
+      pauseAllCalls = !!on;
+      if (el("devPauseAll")) el("devPauseAll").checked = pauseAllCalls;
+      apiSend("/debug/pause", {enabled: pauseAllCalls});
+    }
+
+    function setUsername(value){
+      settings.username = (value || "User").trim() || "User";
+      saveSettings(settings);
+      if (el("s_username")) el("s_username").value = settings.username;
+      if (el("usernameQuick")) el("usernameQuick").value = settings.username;
+    }
+
+    let userProfileTimer = null;
+    function scheduleUserProfileSync(){
+      if (userProfileTimer) clearTimeout(userProfileTimer);
+      userProfileTimer = setTimeout(async () => {
+        userProfileTimer = null;
+        await pushUserProfile();
+      }, 300);
+    }
+
+    async function pushUserProfile(){
+      const username = (settings.username || "User").trim() || "User";
+      try{
+        await apiSend("/user/profile", {username});
+      } catch {
+        // ignore if offline
+      }
+    }
+
+    function slugify(s){
+      return (s || "")
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+    }
+
+    function toInt(v, fallback){
+      const n = parseInt(v, 10);
+      return Number.isFinite(n) ? n : fallback;
+    }
+
+    function escapeHtml(s){
+      return (s ?? "").toString()
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;");
+    }
+
+    function fmtTime(ts){
+      const d = new Date(ts*1000);
+      return d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    }
+
+    function hashColor(str){
+      // deterministic pleasant-ish color (fallback when character has none)
+      let h = 0;
+      const s = (str ?? "").toString();
+      for (let i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) >>> 0;
+      const hue = h % 360;
+      return `hsl(${hue} 55% 55%)`;
+    }
+
+    function authorName(m){
+      if (m.author_type === "user"){
+        const fromMsg = (m.author_id || "").trim();
+        if (fromMsg && fromMsg.toLowerCase() !== "user") return fromMsg;
+        return (settings.username || "You").trim() || "You";
+      }
+      return charactersById[m.author_id]?.name || "Character";
+    }
+
+    function authorAvatar(m){
+      const name = authorName(m);
+      const letter = (name || "?").trim().slice(0,1).toUpperCase();
+      const c = (m.author_type === "character") ? charactersById[m.author_id] : null;
+      const color = (c?.profile_color && c.profile_color.trim()) ? c.profile_color.trim() : hashColor(name);
+      return {letter, color};
+    }
+
+    function renderText(content){
+      const safe = escapeHtml(content || "");
+      if (!settings.safeMarkdown) return safe.replaceAll("\n","<br>");
+      // apply minimal markdown AFTER escaping (safe)
+      let s = safe;
+      s = s.replace(/`([^`]+)`/g, "<code>$1</code>");
+      s = s.replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>");
+      s = s.replace(/\*([^*]+)\*/g, "<i>$1</i>");
+      s = s.replaceAll("\n", "<br>");
+      return s;
+    }
+
+    function setConnStatus(text){
+      el("connStatus").textContent = text;
+      el("srvDot").style.display = (text === "offline" || text === "error") ? "block" : "none";
+    }
+
+    function playPing(){
+      if (!settings.sounds) return;
+      try{
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.frequency.value = 660;
+        g.gain.value = 0.04;
+        o.start();
+        setTimeout(() => { o.stop(); ctx.close(); }, 70);
+      } catch {}
+    }
+
+    async function maybeNotify(title, body){
+      if (!settings.notify) return;
+      if (!("Notification" in window)) return;
+      if (Notification.permission === "default") {
+        try { await Notification.requestPermission(); } catch {}
+      }
+      if (Notification.permission !== "granted") return;
+      try { new Notification(title, { body }); } catch {}
+    }
+
+    function applyUISettings(){
+      // members panel visibility
+      el("rightPanel").style.display = settings.showMembers ? "flex" : "none";
+      // tab availability
+      el("tabPins").style.display = settings.enablePins ? "block" : "none";
+      el("tabDev").style.display = devEnabled ? "block" : "none";
+
+      // compact mode
+      document.body.style.setProperty("--radius", settings.compact ? "12px" : "14px");
+      // update placeholders
+      const ch = conversationsById[activeConversationId];
+      el("msg").setAttribute("data-placeholder", ch ? `Message #${ch.title}` : "Message #channel");
+      if (el("usernameQuick")) el("usernameQuick").value = settings.username || "User";
+    }
+
+    function syncSettingsModal(){
+      el("s_showMembers").checked = !!settings.showMembers;
+      el("s_reactions").checked = !!settings.enableReactions;
+      el("s_editing").checked = !!settings.enableEditing;
+      el("s_pins").checked = !!settings.enablePins;
+      el("s_reply").checked = !!settings.enableReply;
+      el("s_markdown").checked = !!settings.safeMarkdown;
+      el("s_sounds").checked = !!settings.sounds;
+      el("s_notify").checked = !!settings.notify;
+      el("s_compact").checked = !!settings.compact;
+      el("s_time").checked = !!settings.showTime;
+      el("s_avatars").checked = !!settings.showAvatars;
+      el("s_enterSend").checked = !!settings.enterToSend;
+      if (el("s_username")) el("s_username").value = settings.username || "User";
+      if (el("usernameQuick")) el("usernameQuick").value = settings.username || "User";
+      if (el("s_ollama_start")) el("s_ollama_start").value = ollamaStartMode;
+      if (el("s_or_key")) el("s_or_key").value = "";
+      updateOpenRouterStatusUI();
+    }
+
+    function openSettings(){
+      syncSettingsModal();
+      el("settingsBack").style.display = "flex";
+    }
+    function closeSettings(){
+      el("settingsBack").style.display = "none";
+    }
+
+    function openEmojiModal(msgId){
+      emojiTargetMsgId = msgId;
+      el("emojiBack").style.display = "flex";
+    }
+    function closeEmojiModal(){
+      emojiTargetMsgId = null;
+      el("emojiBack").style.display = "none";
+    }
+
+    function openProfile(charId){
+      const c = charactersById[charId];
+      if (!c) return;
+      activeProfileId = charId;
+
+      el("p_name").value = c.name || "";
+      el("p_about").value = c.about || "";
+      el("p_provider").value = c.provider || "openrouter";
+      el("p_model").value = c.model || "";
+      el("p_gate_provider").value = c.gate_provider || c.provider || "openrouter";
+      el("p_gate_model").value = c.gate_model || "";
+      el("p_interval").value = c.gate_interval_seconds || 30;
+      el("p_color").value = c.profile_color || "";
+      el("p_enabled").checked = !!c.enabled;
+      el("p_sys").value = c.system_prompt || "";
+
+      renderProfileConversations(charId);
+      el("profileBack").style.display = "flex";
+    }
+
+    function closeProfile(){
+      activeProfileId = null;
+      el("profileBack").style.display = "none";
+    }
+
+    function renderProfileConversations(charId){
+      const root = el("profileConversations");
+      root.innerHTML = "";
+      const convs = Object.values(conversationsById || {});
+      if (!convs.length){
+        root.innerHTML = `<div class="tiny">No servers found.</div>`;
+        return;
+      }
+      convs.forEach(conv => {
+        const id = conv.id;
+        const checked = (conv.character_ids || []).includes(charId);
+        const row = document.createElement("div");
+        row.className = "row";
+        row.style.marginBottom = "6px";
+        row.innerHTML = `
+          <label class="tiny">
+            <input type="checkbox" data-conv="${escapeHtml(id)}" ${checked ? "checked" : ""} />
+            #${escapeHtml(conv.title || "channel")}
+          </label>
+        `;
+        root.appendChild(row);
+      });
+    }
+
+    async function saveProfile(){
+      if (!activeProfileId) return;
+      const payload = {
+        name: (el("p_name").value || "").trim(),
+        about: (el("p_about").value || "").trim(),
+        provider: el("p_provider").value,
+        model: (el("p_model").value || "").trim(),
+        gate_provider: el("p_gate_provider").value,
+        gate_model: (el("p_gate_model").value || "").trim(),
+        gate_interval_seconds: toInt(el("p_interval").value || "30", 30),
+        profile_color: (el("p_color").value || "").trim(),
+        enabled: !!el("p_enabled").checked,
+        system_prompt: (el("p_sys").value || "").trim(),
+      };
+      await apiSend(`/characters/${activeProfileId}`, payload, "PATCH");
+
+      const boxes = Array.from(el("profileConversations").querySelectorAll("input[data-conv]"));
+      for (const box of boxes){
+        const convId = box.getAttribute("data-conv");
+        const conv = conversationsById[convId];
+        if (!conv) continue;
+        const ids = Array.from(conv.character_ids || []);
+        const has = ids.includes(activeProfileId);
+        if (box.checked && !has){
+          ids.push(activeProfileId);
+        } else if (!box.checked && has){
+          const next = ids.filter(id => id !== activeProfileId);
+          ids.length = 0;
+          next.forEach(id => ids.push(id));
+        }
+        if (JSON.stringify(ids) !== JSON.stringify(conv.character_ids || [])){
+          await apiSend(`/conversations/${convId}`, {character_ids: ids}, "PATCH");
+        }
+      }
+
+      closeProfile();
+      await boot();
+    }
+
+    // -------------------------
+    // Right panel rendering
+    // -------------------------
+    function setRightTab(tab){
+      activeRightTab = tab;
+      el("tabMembers").classList.toggle("active", tab==="members");
+      el("tabPins").classList.toggle("active", tab==="pins");
+      el("tabDev").classList.toggle("active", tab==="dev");
+      renderRightPanel();
+    }
+
+    function statusClass(st){
+      if (st === "online") return "st-online";
+      if (st === "idle") return "st-idle";
+      if (st === "dnd") return "st-dnd";
+      if (st === "typing") return "st-typing";
+      return "st-offline";
+    }
+
+    async function renderRightPanel(){
+      const body = el("rightBody");
+      body.innerHTML = "";
+
+      if (activeRightTab === "members"){
+        const list = document.createElement("div");
+        members.forEach(m => {
+          const div = document.createElement("div");
+          div.className = "member";
+          const dot = `<span class="statusDot ${statusClass(m.status)}"></span>`;
+          div.innerHTML = `
+            <div class="memberL">
+              <div class="avatar" style="width:34px;height:34px;border-radius:12px;background:${escapeHtml(m.profile_color || hashColor(m.name))}20;border-color:#2a3455;">
+                ${escapeHtml((m.name||"?").slice(0,1).toUpperCase())}
+              </div>
+              <div style="min-width:0">
+                <div class="mName">${escapeHtml(m.name)}</div>
+                <div class="mAbout">${escapeHtml(m.about || m.status)}</div>
+              </div>
+            </div>
+            ${dot}
+          `;
+          div.onclick = () => openProfile(m.id);
+          list.appendChild(div);
+        });
+        body.appendChild(list);
+        return;
+      }
+
+      if (activeRightTab === "pins"){
+        if (!settings.enablePins){
+          body.innerHTML = `<div class="tiny">Pinning is disabled in Settings.</div>`;
+          return;
+        }
+        if (!activeConversationId){
+          body.innerHTML = `<div class="tiny">No active channel.</div>`;
+          return;
+        }
+        body.innerHTML = `<div class="tiny">Loading pins…</div>`;
+        try{
+          const pins = await apiJson(`/conversations/${activeConversationId}/pins`);
+          const listPins = Array.isArray(pins) ? pins : [];
+          body.innerHTML = "";
+          if (!listPins.length){
+            body.innerHTML = `<div class="tiny">No pinned messages yet.</div>`;
+            return;
+          }
+          listPins.reverse().forEach(p => {
+            const div = document.createElement("div");
+            div.className = "card";
+            div.style.marginBottom = "10px";
+            div.innerHTML = `
+              <div style="display:flex; justify-content:space-between; gap:10px;">
+                <div style="font-weight:900">${escapeHtml(authorName(p))}</div>
+                <div class="tiny">${escapeHtml(fmtTime(p.ts))}</div>
+              </div>
+              <div class="tiny" style="margin-top:8px; white-space:pre-wrap">${escapeHtml(p.content)}</div>
+              <div style="margin-top:10px;">
+                <button class="btn" data-jump="${escapeHtml(p.id)}">Jump</button>
+              </div>
+            `;
+            div.querySelector("[data-jump]").onclick = () => jumpToMessage(p.id);
+            body.appendChild(div);
+          });
+        } catch {
+          body.innerHTML = `<div class="tiny">Failed to load pins.</div>`;
+        }
+        return;
+      }
+
+      if (activeRightTab === "dev"){
+        if (!devEnabled){
+          body.innerHTML = `<div class="tiny">Dev feed is off.</div>`;
+          return;
+        }
+        body.innerHTML = `
+          <div class="devBar">
+            <span class="pill" id="devStatus">live</span>
+            <div style="flex:1"></div>
+            <button class="btn" id="devPauseBtn">Pause</button>
+            <button class="btn" id="devClearBtn">Clear</button>
+          </div>
+          <div id="devLog"></div>
+        `;
+        updateDevStatus();
+        el("devPauseBtn").onclick = () => { devPaused = !devPaused; updateDevStatus(); };
+        el("devClearBtn").onclick = () => {
+          const log = el("devLog");
+          if (log) log.innerHTML = "";
+        };
+        // existing events are appended directly as they arrive
+        return;
+      }
+    }
+
+    // -------------------------
+    // Channel + models loading
+    // -------------------------
+    async function loadHealth(){
+      try{
+        const h = await apiJson("/health");
+
+        // capture defaults for UI
+        if (h.llm_provider_default) llmProviderDefault = h.llm_provider_default;
+        if (h.defaults?.openrouter_default_model) openrouterDefaultModel = h.defaults.openrouter_default_model;
+        if (h.defaults?.puter_default_model != null) puterDefaultModel = h.defaults.puter_default_model;
+
+        openrouterConfigured = !!h.openrouter_configured;
+        puterConfigured = (h.puter_configured !== undefined) ? !!h.puter_configured : true;
+        const oll = h.ollama_up ? "online" : "offline";
+        const or = openrouterConfigured ? "configured" : "missing key";
+        const pr = puterConfigured ? "available" : "unavailable";
+        const def = llmProviderDefault === "openrouter" ? "OpenRouter" : (llmProviderDefault === "puter" ? "Puter" : "Ollama");
+
+        el("healthLine").innerHTML =
+          `Ollama: <b>${oll}</b> • OpenRouter: <b>${or}</b> • Puter: <b>${pr}</b> • Default: <b>${def}</b>`;
+      } catch {
+        el("healthLine").textContent = "Health check failed";
+      }
+    }
+
+    async function loadOllamaModels(){
+      // Standalone build: Ollama removed. This is kept as a no-op for compatibility.
+      const chatSel = el("c_model");
+      const gateSel = el("c_gate");
+      if (chatSel) chatSel.innerHTML = "";
+      if (gateSel) gateSel.innerHTML = "";
+    }
+
+    function updateOpenRouterStatusUI(){
+      const statusText = openrouterConfigured
+        ? "OpenRouter key detected."
+        : "OpenRouter key missing. Add your key.";
+      const statusColor = openrouterConfigured ? "var(--good)" : "var(--warn)";
+      const orStatus = el("openrouterStatus");
+      if (orStatus){
+        orStatus.textContent = statusText;
+        orStatus.style.color = statusColor;
+      }
+      const orSettings = el("s_or_status");
+      if (orSettings){
+        orSettings.textContent = statusText;
+        orSettings.style.color = statusColor;
+      }
+      const notice = el("orKeyNotice");
+      if (notice){
+        notice.style.display = openrouterConfigured ? "none" : "block";
+      }
+    }
+
+    function updateProviderUI(){
+      const p = el("c_provider") ? el("c_provider").value : "openrouter";
+      const gp = el("c_gate_provider") ? el("c_gate_provider").value : "openrouter";
+
+      const showOpenRouter = (p === "openrouter") || (gp === "openrouter");
+      const orCard = el("openrouterCard");
+      if (orCard) orCard.style.display = showOpenRouter ? "block" : "none";
+      updateOpenRouterStatusUI();
+
+      const showPuter = (p === "puter") || (gp === "puter");
+      const puterCard = el("puterCard");
+      if (puterCard) puterCard.style.display = showPuter ? "block" : "none";
+      const puterStatus = el("puterStatus");
+      if (puterStatus){
+        puterStatus.textContent = puterConfigured
+          ? "Puter is available."
+          : "Puter unavailable. Make sure Puter.js is loaded (https://js.puter.com).";
+        puterStatus.style.color = puterConfigured ? "var(--good)" : "var(--warn)";
+      }
+
+      // helpful defaults
+      if (showOpenRouter){
+        if (el("c_or_model") && !el("c_or_model").value.trim()){
+          el("c_or_model").value = openrouterDefaultModel;
+        }
+      }
+      if (showPuter){
+        if (el("c_puter_model") && !el("c_puter_model").value.trim() && puterDefaultModel){
+          el("c_puter_model").value = puterDefaultModel;
+        }
+      }
+    }
+
+    function initProviderSelectors(){
+      if (!el("c_provider") || !el("c_gate_provider")) return;
+      // default to server's default provider for new AIs
+      el("c_provider").value = (llmProviderDefault === "puter") ? "puter" : "openrouter";
+      el("c_gate_provider").value = (llmProviderDefault === "puter") ? "puter" : "openrouter";
+      el("c_provider").onchange = updateProviderUI;
+      el("c_gate_provider").onchange = updateProviderUI;
+      updateProviderUI();
+    }
+
+    async function loadCharacters(){
+      try{
+        const data = await apiJson("/characters");
+        charactersById = {};
+        (Array.isArray(data) ? data : []).forEach(c => {
+          if (c && c.id) charactersById[c.id] = c;
+        });
+      } catch {
+        charactersById = {};
+      }
+    }
+
+    async function loadConversations(){
+      let data = [];
+      try{
+        const res = await apiJson("/conversations");
+        data = Array.isArray(res) ? res : [];
+      } catch {
+        data = [];
+      }
+      conversationsById = {};
+      data.forEach(c => conversationsById[c.id] = c);
+
+      const list = el("channelsList");
+      list.innerHTML = "";
+      data.forEach(conv => {
+        const d = document.createElement("div");
+        d.className = "channelItem" + (conv.id === activeConversationId ? " active" : "");
+        d.innerHTML = `
+          <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+            <span class="hash">#</span>
+            <div class="chName">${escapeHtml(conv.title)}</div>
+          </div>
+          <span class="pill">${conv.character_ids.length}</span>
+        `;
+        d.onclick = () => setActiveConversation(conv.id);
+        list.appendChild(d);
+      });
+
+      if (activeConversationId && !conversationsById[activeConversationId]) activeConversationId = null;
+      if (!data.length) activeConversationId = null;
+      if (!activeConversationId && data.length) setActiveConversation(data[0].id);
+    }
+
+    // -------------------------
+    // Message rendering
+    // -------------------------
+    function clearChat(){
+      el("chat").innerHTML = "";
+      messagesById = {};
+      messageEls = {};
+      typing = {};
+      el("typingLine").textContent = "";
+    }
+
+    function makeMsgActions(m){
+      const wrap = document.createElement("div");
+      wrap.className = "msgActions";
+
+      const btnReact = document.createElement("button");
+      btnReact.className = "miniBtn";
+      btnReact.title = "React";
+      btnReact.textContent = "😀";
+      btnReact.onclick = (e) => { e.stopPropagation(); if(settings.enableReactions) openEmojiModal(m.id); };
+
+      const btnReply = document.createElement("button");
+      btnReply.className = "miniBtn";
+      btnReply.title = "Reply";
+      btnReply.textContent = "↩︎";
+      btnReply.onclick = (e) => { e.stopPropagation(); if(settings.enableReply) startReply(m.id); };
+
+      const btnEdit = document.createElement("button");
+      btnEdit.className = "miniBtn";
+      btnEdit.title = "Edit";
+      btnEdit.textContent = "✎";
+      btnEdit.onclick = (e) => { e.stopPropagation(); if(settings.enableEditing) startEdit(m.id); };
+
+      const btnPin = document.createElement("button");
+      btnPin.className = "miniBtn";
+      btnPin.title = "Pin";
+      btnPin.textContent = "📌";
+      btnPin.onclick = async (e) => { e.stopPropagation(); if(settings.enablePins) await togglePin(m.id); };
+
+      if (settings.enableReactions) wrap.appendChild(btnReact);
+      if (settings.enableReply) wrap.appendChild(btnReply);
+
+      // Only allow editing own messages
+      const editable = (m.author_type === "user" && m.author_id === "user");
+      if (settings.enableEditing && editable) wrap.appendChild(btnEdit);
+
+      if (settings.enablePins) wrap.appendChild(btnPin);
+      return wrap;
+    }
+
+    function renderReactions(m){
+      const cont = document.createElement("div");
+      cont.className = "reactions";
+      const rx = m.reactions || {};
+      const keys = Object.keys(rx);
+      keys.sort((a,b) => (rx[b]?.length||0) - (rx[a]?.length||0));
+      keys.forEach(emoji => {
+        const cnt = rx[emoji]?.length || 0;
+        if (!cnt) return;
+        const chip = document.createElement("div");
+        chip.className = "react";
+        chip.innerHTML = `<span>${escapeHtml(emoji)}</span><span class="cnt">${cnt}</span>`;
+        chip.onclick = () => {
+          if (!settings.enableReactions) return;
+          toggleReaction(m.id, emoji);
+        };
+        cont.appendChild(chip);
+      });
+      return cont;
+    }
+
+    function renderReplyPreview(m){
+      if (!m.reply_to) return null;
+      const target = messagesById[m.reply_to];
+      if (!target) return null;
+      const prev = document.createElement("div");
+      prev.className = "replyPreview";
+      prev.innerHTML = `Replying to <b>${escapeHtml(authorName(target))}</b>: ${escapeHtml((target.content||"").slice(0,120))}${(target.content||"").length>120?"…":""}`;
+      return prev;
+    }
+
+    function makeMessageElement(m){
+      const row = document.createElement("div");
+      row.className = "msgRow";
+      row.dataset.mid = m.id;
+
+      const av = authorAvatar(m);
+      const avatar = document.createElement("div");
+      avatar.className = "avatar";
+      avatar.style.display = settings.showAvatars ? "flex" : "none";
+      avatar.style.background = `${av.color}20`;
+      avatar.style.borderColor = `${av.color}55`;
+      avatar.textContent = av.letter;
+
+      const main = document.createElement("div");
+      main.className = "msgMain";
+
+      const header = document.createElement("div");
+      header.className = "msgHeader";
+
+      const author = document.createElement("div");
+      author.className = "author";
+      author.textContent = authorName(m);
+
+      const time = document.createElement("div");
+      time.className = "time";
+      time.style.display = settings.showTime ? "block" : "none";
+      time.textContent = fmtTime(m.ts);
+
+      const tags = document.createElement("div");
+      tags.className = "tags";
+      if (m.pinned) {
+        const t = document.createElement("span");
+        t.className = "tag";
+        t.textContent = "PINNED";
+        tags.appendChild(t);
+      }
+      if (m.edited_ts) {
+        const t = document.createElement("span");
+        t.className = "tag";
+        t.textContent = "edited";
+        tags.appendChild(t);
+      }
+
+      header.appendChild(author);
+      header.appendChild(time);
+      header.appendChild(tags);
+
+      const text = document.createElement("div");
+      text.className = "msgText";
+      text.innerHTML = renderText(m.content);
+
+      main.appendChild(header);
+
+      const rep = renderReplyPreview(m);
+      if (rep) main.appendChild(rep);
+
+      main.appendChild(text);
+
+      const rxEl = renderReactions(m);
+      if (rxEl.childNodes.length) main.appendChild(rxEl);
+
+      row.appendChild(avatar);
+      row.appendChild(main);
+      row.appendChild(makeMsgActions(m));
+
+      return row;
+    }
+
+    function addMessage(m, {scroll=true} = {}){
+      // de-dupe: if the server ever sends the same message twice, update instead of duplicating
+      if (messageEls[m.id]){
+        updateMessage(m);
+        return;
+      }
+
+      messagesById[m.id] = m;
+
+      // remove welcome on first message
+      const wb = el("welcomeBox");
+      if (wb) wb.style.display = "none";
+
+      const node = makeMessageElement(m);
+      messageEls[m.id] = node;
+      el("chat").appendChild(node);
+
+      if (scroll) {
+        el("chat").scrollTop = el("chat").scrollHeight;
+      }
+
+      playPing();
+      if (m.author_type !== "user") {
+        maybeNotify(`#${conversationsById[activeConversationId]?.title || "channel"}`, `${authorName(m)}: ${(m.content||"").slice(0,120)}`);
+      }
+    }
+
+    function updateMessage(m){
+      messagesById[m.id] = m;
+      const old = messageEls[m.id];
+      if (!old) return;
+      const newEl = makeMessageElement(m);
+      messageEls[m.id] = newEl;
+      old.replaceWith(newEl);
+    }
+
+    function jumpToMessage(id){
+      const node = messageEls[id];
+      if (!node) return;
+      node.scrollIntoView({behavior:"smooth", block:"center"});
+      node.style.outline = "2px solid rgba(88,101,242,.8)";
+      setTimeout(() => node.style.outline = "none", 900);
+    }
+
+    // -------------------------
+    // Typing indicator
+    // -------------------------
+    function renderTypingLine(){
+      const names = Object.entries(typing)
+        .filter(([_,v]) => v)
+        .map(([id,_]) => charactersById[id]?.name || "AI");
+      el("typingLine").textContent = names.length ? `${names.join(", ")} typing…` : "";
+    }
+
+    // -------------------------
+    // Actions (reactions, pins, edits, replies)
+    // -------------------------
+    async function toggleReaction(messageId, emoji){
+      if (!activeConversationId) return;
+      await apiSend(`/conversations/${activeConversationId}/messages/${messageId}/reactions`, {
+        emoji, actor_type:"user", actor_id:"user"
+      });
+    }
+
+    async function togglePin(messageId){
+      if (!activeConversationId) return;
+      await apiSend(`/conversations/${activeConversationId}/messages/${messageId}/pin`, {
+        actor_type:"user", actor_id:"user"
+      });
+      // refresh pins tab if open
+      if (activeRightTab === "pins") renderRightPanel();
+    }
+
+    function startReply(messageId){
+      if (!settings.enableReply) return;
+      replyToId = messageId;
+      const m = messagesById[messageId];
+      if (!m) return;
+      el("replyText").innerHTML = `Replying to <b>${escapeHtml(authorName(m))}</b>: ${escapeHtml((m.content||"").slice(0,120))}${(m.content||"").length>120?"…":""}`;
+      el("replyBar").style.display = "block";
+      el("msg").focus();
+    }
+
+    function cancelReply(){
+      replyToId = null;
+      el("replyBar").style.display = "none";
+      el("replyText").textContent = "";
+    }
+
+    async function startEdit(messageId){
+      if (!settings.enableEditing) return;
+      const m = messagesById[messageId];
+      if (!m) return;
+      if (m.author_type !== "user") return;
+
+      // simple inline edit: load content to composer and mark state
+      const current = (m.content || "");
+      el("msg").textContent = current;
+      el("msg").focus();
+
+      // temporary edit state
+      el("send").dataset.editing = messageId;
+      el("send").title = "Save edit";
+      el("send").textContent = "✓";
+    }
+
+    async function submitEdit(messageId, newText){
+      if (!activeConversationId) return;
+      await apiSend(`/conversations/${activeConversationId}/messages/${messageId}`, {
+        editor_type:"user", editor_id:"user", content: newText
+      }, "PATCH");
+    }
+
+    // -------------------------
+    // Send message
+    // -------------------------
+    async function sendMessage(){
+      const content = el("msg").textContent.trim();
+      if (!content || !activeConversationId) return;
+
+      await pushUserProfile();
+
+      // if editing
+      const editingId = el("send").dataset.editing;
+      if (editingId){
+        el("msg").textContent = "";
+        el("send").dataset.editing = "";
+        el("send").title = "Send";
+        el("send").textContent = "➤";
+        await submitEdit(editingId, content);
+        return;
+      }
+
+      el("msg").textContent = "";
+      const username = (settings.username || "User").trim() || "User";
+      const payload = { author_type:"user", author_id: username, content };
+      if (settings.enableReply && replyToId) payload.reply_to = replyToId;
+      cancelReply();
+
+      await apiSend(`/conversations/${activeConversationId}/messages`, payload);
+    }
+
+    // -------------------------
+    // Create character / channel
+    // -------------------------
+    async function createCharacter(){
+      const name = el("c_name").value.trim();
+      if (!name) return alert("Name required");
+
+      const provider = el("c_provider") ? el("c_provider").value : "openrouter";
+      const gate_provider = el("c_gate_provider") ? el("c_gate_provider").value : "openrouter";
+      const usesOpenRouter = (provider === "openrouter") || (gate_provider === "openrouter");
+      const usesPuter = (provider === "puter") || (gate_provider === "puter");
+      if (usesOpenRouter && !openrouterConfigured){
+        alert("OpenRouter key missing. Add your key in the OpenRouter card.");
+        return;
+      }
+      if (usesPuter && !puterConfigured){
+        alert("Puter unavailable. Make sure Puter.js is loaded (https://js.puter.com).");
+        return;
+      }
+
+      // pick model fields based on provider
+      const model = (provider === "openrouter")
+        ? ((el("c_or_model")?.value || "").trim() || openrouterDefaultModel)
+        : (provider === "puter")
+          ? ((el("c_puter_model")?.value || "").trim() || puterDefaultModel)
+          : el("c_model").value;
+
+      const gate_model = (gate_provider === "openrouter")
+        ? ((el("c_or_gate")?.value || "").trim() || (provider === "openrouter" ? model : openrouterDefaultModel))
+        : (gate_provider === "puter")
+          ? ((el("c_puter_gate")?.value || "").trim() || (provider === "puter" ? model : puterDefaultModel))
+          : el("c_gate").value;
+
+      if (!model) return alert("Select a chat model");
+      if (!gate_model) return alert("Select a gate model");
+
+      const system_prompt = el("c_sys").value.trim() || `You are ${name}.`;
+      const about = el("c_about").value.trim();
+      const profile_color = el("c_color").value.trim();
+      const gate_interval_seconds = toInt(el("c_interval").value || "30", 30);
+      const humanize_pacing = !!el("c_humanize").checked;
+
+      await apiSend("/characters", {
+        name,
+        provider,
+        model,
+        gate_provider,
+        gate_model,
+        system_prompt,
+        gate_interval_seconds,
+        enabled: true,
+        about,
+        profile_color,
+        humanize_pacing,
+      });
+
+      el("c_name").value = "";
+      el("c_sys").value = "";
+      el("c_about").value = "";
+      el("c_color").value = "";
+      el("c_interval").value = "30";
+      el("c_humanize").checked = false;
+
+      // keep OpenRouter model typed values, but refresh the app state
+      await boot();
+    }
+
+
+
+    async function createChannel(){
+      const raw = prompt("Channel name (no #):", "new-channel");
+      if (!raw) return;
+      const title = slugify(raw);
+      if (!title) return alert("Channel name required");
+      await apiSend("/conversations", { title, character_ids: [] });
+      await boot();
+    }
+
+    // -------------------------
+    // Dev feed
+    // -------------------------
+    function addDevEvent(evt){
+      const root = el("devLog");
+      if (!root) return;
+      if (devPaused) return;
+
+      const stage = evt.stage || "event";
+      const d = evt.data || {};
+      const who = d.character?.name ? d.character.name : "";
+      const when = fmtTime(evt.ts);
+
+      let title = stage;
+      let lines = [];
+      let accent = "";
+
+      const provider = d.provider_label || d.gate_provider_label || d.provider || d.gate_provider || "";
+      const model = d.model || d.gate_model || "";
+
+      if (stage === "gate_check_start"){
+        title = "Gate check started";
+        lines.push(`Character: ${who || "—"}`);
+        if (provider) lines.push(`Gate backend: ${provider}`);
+        if (d.gate_model) lines.push(`Gate model: ${d.gate_model}`);
+        if (d.interval_s != null) lines.push(`Interval: ${d.interval_s}s`);
+        accent = "var(--yellow)";
+      } else if (stage === "gate_result"){
+        const respond = !!d.respond;
+        title = respond ? "Gate: ✅ will respond" : "Gate: ❌ skip";
+        lines.push(`Character: ${who || "—"}`);
+        if (provider) lines.push(`Gate backend: ${provider}`);
+        if (d.gate_model) lines.push(`Gate model: ${d.gate_model}`);
+        if (d.decision) lines.push(`Decision: ${d.decision}`);
+        if (d.yes_count != null || d.no_count != null) lines.push(`Votes: YES ${d.yes_count ?? 0} • NO ${d.no_count ?? 0}`);
+        if (d.raw) lines.push(`Raw: ${d.raw}`);
+        if (d.prompt_preview) lines.push(`Prompt preview: ${d.prompt_preview}`);
+        accent = respond ? "var(--green)" : "var(--red)";
+      } else if (stage === "generate_start"){
+        title = "Reply generation started";
+        lines.push(`Character: ${who || "—"}`);
+        if (provider) lines.push(`Backend: ${provider}`);
+        if (model) lines.push(`Model: ${model}`);
+        accent = "var(--blue)";
+      } else if (stage === "chat_prompt_preview"){
+        title = "Prompt preview";
+        lines.push(`Character: ${who || "—"}`);
+        if (provider) lines.push(`Backend: ${provider}`);
+        if (model) lines.push(`Model: ${model}`);
+        if (d.preview) lines.push(d.preview);
+      } else if (stage === "draft_reply"){
+        title = "Draft reply";
+        lines.push(`Character: ${who || "—"}`);
+        if (d.reply) lines.push(d.reply);
+      } else if (stage === "message_committed"){
+        title = "Message committed";
+        lines.push(`Character: ${who || "—"}`);
+        if (d.message_id) lines.push(`Message ID: ${d.message_id}`);
+      } else if (stage === "ollama_offline"){
+        title = "Ollama offline";
+        if (d.note) lines.push(d.note);
+        accent = "var(--red)";
+      } else if (stage === "error"){
+        title = "Error";
+        if (d.note) lines.push(d.note);
+        if (d.error) lines.push(d.error);
+        accent = "var(--red)";
+      } else {
+        // generic fallback
+        if (who) lines.push(`Character: ${who}`);
+        if (provider) lines.push(`Backend: ${provider}`);
+        if (model) lines.push(`Model: ${model}`);
+        if (d.note) lines.push(d.note);
+      }
+
+      const wrap = document.createElement("div");
+      wrap.className = "card";
+      wrap.style.marginBottom = "10px";
+
+      const bullets = lines
+        .filter(Boolean)
+        .map((t, i) => `<div class="tiny" style="white-space:pre-wrap; margin-top:${i?6:0}px;">${escapeHtml(String(t))}</div>`)
+        .join("");
+
+      const raw = JSON.stringify(d || {}, null, 2);
+
+      wrap.innerHTML = `
+        <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start;">
+          <div style="font-weight:900">${escapeHtml(title)}</div>
+          <div class="tiny">${escapeHtml(who ? who + " • " : "")}${escapeHtml(when)}</div>
+        </div>
+        ${accent ? `<div style="height:3px; background:${accent}; border-radius:999px; margin-top:8px;"></div>` : ""}
+        <div style="margin-top:8px;">${bullets}</div>
+        <details style="margin-top:10px;">
+          <summary class="tiny">Raw event</summary>
+          <div class="tiny" style="white-space:pre-wrap; margin-top:8px;">${escapeHtml(raw)}</div>
+        </details>
+      `;
+
+      root.prepend(wrap);
+      // cap
+      while (root.children.length > 60) root.removeChild(root.lastChild);
+    }
+
+    function updateDevStatus(){
+      const status = el("devStatus");
+      const pauseBtn = el("devPauseBtn");
+      if (status) status.textContent = devPaused ? "paused" : "live";
+      if (pauseBtn) pauseBtn.textContent = devPaused ? "Resume" : "Pause";
+    }
+
+    function setDevMode(on){
+      devEnabled = !!on;
+      if (!devEnabled) devPaused = false;
+      el("tabDev").style.display = devEnabled ? "block" : "none";
+      if (!devEnabled && activeRightTab === "dev") setRightTab("members");
+      renderRightPanel();
+    }
+
+    // -------------------------
+    // Active conversation
+    // -------------------------
+    async function setActiveConversation(convId){
+      activeConversationId = convId;
+
+      const conv = conversationsById[convId];
+      el("activeTitle").textContent = conv ? conv.title : "—";
+      el("activeMeta").textContent = conv ? `AI members: ${(conv.character_ids||[]).map(id => charactersById[id]?.name || "???").join(", ")}` : "";
+
+      clearChat();
+      applyUISettings();
+
+      setConnStatus("standalone");
+
+      // Load messages from local state
+      try{
+        const init = await apiJson(`/conversations/${activeConversationId}/init`);
+        (init.messages || []).forEach(m => addMessage(m, {scroll:false}));
+        members = init.members || [];
+        el("memberCount").textContent = `${members.length}`;
+        renderRightPanel();
+        el("chat").scrollTop = el("chat").scrollHeight;
+      } catch {
+        members = [];
+        el("memberCount").textContent = "0";
+        renderRightPanel();
+      }
+
+      // rerender channel list active state
+      loadConversations();
+    }
+
+    // -------------------------
+    // Search
+    // -------------------------
+    async function runSearch(){
+      const q = el("searchInput").value.trim();
+      if (!q || !activeConversationId) return;
+      setRightTab("pins"); // reuse pins tab area for results feel
+      el("rightBody").innerHTML = `<div class="tiny">Searching for <b>${escapeHtml(q)}</b>…</div>`;
+      try{
+        const res = await apiJson(`/conversations/${activeConversationId}/search?q=${encodeURIComponent(q)}&limit=50`);
+        const results = Array.isArray(res) ? res : [];
+        const body = el("rightBody");
+        body.innerHTML = "";
+        if (!results.length){
+          body.innerHTML = `<div class="tiny">No results.</div>`;
+          return;
+        }
+        results.reverse().forEach(m => {
+          const div = document.createElement("div");
+          div.className = "card";
+          div.style.marginBottom = "10px";
+          div.innerHTML = `
+            <div style="display:flex; justify-content:space-between; gap:10px;">
+              <div style="font-weight:900">${escapeHtml(authorName(m))}</div>
+              <div class="tiny">${escapeHtml(fmtTime(m.ts))}</div>
+            </div>
+            <div class="tiny" style="margin-top:8px; white-space:pre-wrap">${escapeHtml((m.content||"").slice(0,220))}${(m.content||"").length>220?"…":""}</div>
+            <div style="margin-top:10px;">
+              <button class="btn" data-jump="${escapeHtml(m.id)}">Jump</button>
+            </div>
+          `;
+          div.querySelector("[data-jump]").onclick = () => jumpToMessage(m.id);
+          body.appendChild(div);
+        });
+      } catch {
+        el("rightBody").innerHTML = `<div class="tiny">Search failed.</div>`;
+      }
+    }
+
+    // -------------------------
+    // Emoji grid
+    // -------------------------
+    function buildEmojiGrid(){
+      const grid = el("emojiGrid");
+      grid.innerHTML = "";
+      QUICK_EMOJI.forEach(e => {
+        const b = document.createElement("button");
+        b.className = "btn";
+        b.style.width = "56px";
+        b.style.height = "46px";
+        b.style.fontSize = "20px";
+        b.textContent = e;
+        b.onclick = () => {
+          if (!emojiTargetMsgId) return;
+          toggleReaction(emojiTargetMsgId, e);
+          closeEmojiModal();
+        };
+        grid.appendChild(b);
+      });
+    }
+
+    // -------------------------
+    // Boot
+    // -------------------------
+    async function boot(){
+      await loadHealth();
+      await loadPauseState();
+      await pushUserProfile();
+      initProviderSelectors();
+      await loadCharacters();
+      await loadConversations();
+      applyUISettings();
+    }
+
+    // -------------------------
+    // Wire up UI
+    // -------------------------
+    el("refreshAll").onclick = () => boot();
+
+    // OpenRouter key save/clear
+    if (el("or_save")) {
+      el("or_save").onclick = () => {
+        const k = (el("or_key")?.value || "").trim();
+        if (!k) { alert("Paste your OpenRouter key first."); return; }
+        setOpenRouterKey(k);
+        el("or_key").value = "";
+        updateProviderUI();
+        loadHealth();
+      };
+    }
+    if (el("or_clear")) {
+      el("or_clear").onclick = () => {
+        setOpenRouterKey("");
+        if (el("or_key")) el("or_key").value = "";
+        updateProviderUI();
+        loadHealth();
+      };
+    }
+    if (el("s_or_save")) {
+      el("s_or_save").onclick = () => {
+        const k = (el("s_or_key")?.value || "").trim();
+        if (!k) { alert("Paste your OpenRouter key first."); return; }
+        setOpenRouterKey(k);
+        if (el("s_or_key")) el("s_or_key").value = "";
+        updateProviderUI();
+        loadHealth();
+      };
+    }
+    if (el("s_or_clear")) {
+      el("s_or_clear").onclick = () => {
+        setOpenRouterKey("");
+        if (el("s_or_key")) el("s_or_key").value = "";
+        updateProviderUI();
+        loadHealth();
+      };
+    }
+    el("createChar").onclick = () => createCharacter();
+    el("newChannel").onclick = () => createChannel();
+
+    el("send").onclick = () => sendMessage();
+    el("btnPins").onclick = () => setRightTab("pins");
+    el("btnMembers").onclick = () => { settings.showMembers = !settings.showMembers; saveSettings(settings); applyUISettings(); };
+
+    el("tabMembers").onclick = () => setRightTab("members");
+    el("tabPins").onclick = () => setRightTab("pins");
+    el("tabDev").onclick = () => setRightTab("dev");
+
+    el("openSettings").onclick = () => openSettings();
+    el("closeSettings").onclick = () => closeSettings();
+    el("settingsBack").onclick = (e) => { if (e.target === el("settingsBack")) closeSettings(); };
+    el("closeProfile").onclick = () => closeProfile();
+    el("profileBack").onclick = (e) => { if (e.target === el("profileBack")) closeProfile(); };
+    el("saveProfile").onclick = () => saveProfile();
+
+    el("devToggle").onchange = (e) => setDevMode(e.target.checked);
+    if (el("devPauseAll")) {
+      el("devPauseAll").onchange = (e) => setPauseAllCalls(e.target.checked);
+    }
+
+    el("btnEmoji").onclick = () => {
+      if (!settings.enableReactions){
+        openSettings();
+        return;
+      }
+      // if user has a reply target, use it; else do nothing
+      if (!replyToId){
+        alert("Tip: hover a message and click 😀 to react. Or reply first to select a target.");
+        return;
+      }
+      openEmojiModal(replyToId);
+    };
+
+    el("closeEmoji").onclick = () => closeEmojiModal();
+    el("emojiBack").onclick = (e) => { if (e.target === el("emojiBack")) closeEmojiModal(); };
+
+    el("cancelReply").onclick = () => cancelReply();
+
+    el("searchInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") runSearch();
+    });
+
+    // composer key handling
+    el("msg").addEventListener("keydown", (e) => {
+      if (!settings.enterToSend) return;
+      if (e.key === "Enter" && !e.shiftKey){
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    // Settings toggle handlers
+    const bind = (id, key) => {
+      el(id).onchange = (e) => {
+        settings[key] = !!e.target.checked;
+        saveSettings(settings);
+        applyUISettings();
+        // re-render messages (some settings affect layout)
+        Object.values(messagesById).forEach(m => updateMessage(m));
+        renderRightPanel();
+      };
+    };
+    bind("s_showMembers", "showMembers");
+    bind("s_reactions", "enableReactions");
+    bind("s_editing", "enableEditing");
+    bind("s_pins", "enablePins");
+    bind("s_reply", "enableReply");
+    bind("s_markdown", "safeMarkdown");
+    bind("s_sounds", "sounds");
+    bind("s_notify", "notify");
+    bind("s_compact", "compact");
+    bind("s_time", "showTime");
+    bind("s_avatars", "showAvatars");
+    bind("s_enterSend", "enterToSend");
+    const usernameInput = el("s_username");
+    if (usernameInput){
+      usernameInput.oninput = (e) => {
+        setUsername(e.target.value);
+        scheduleUserProfileSync();
+      };
+    }
+    const usernameQuick = el("usernameQuick");
+    if (usernameQuick){
+      usernameQuick.oninput = (e) => {
+        setUsername(e.target.value);
+        scheduleUserProfileSync();
+      };
+    }
+    const ollamaStartSelect = el("s_ollama_start");
+    if (ollamaStartSelect){
+      ollamaStartSelect.onchange = (e) => setOllamaStartMode(e.target.value);
+    }
+
+    // Build emoji grid
+    buildEmojiGrid();
+
+    // Start
+    applyUISettings();
+    boot();
+  </script>
+</body>
+</html>
