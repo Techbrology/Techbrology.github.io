@@ -1,1 +1,1597 @@
-This is a cool test to test my website OK 
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>RP Chat (OpenRouter)</title>
+  <style>
+    :root{
+      --bg0:#0b0d12;
+      --bg1:#0f1117;
+      --bg2:#151826;
+      --card:#0f1322;
+      --line:#232a3a;
+      --text:#e7e7e7;
+      --muted:#9aa4b2;
+      --accent:#7c5cff;
+      --good:#3ba55d;
+      --warn:#faa61a;
+      --bad:#ed4245;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 14px;
+      --sidebar-width: clamp(260px, 28vw, 420px);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: linear-gradient(180deg, var(--bg0), var(--bg1));
+      color: var(--text);
+      height: 100vh;
+      overflow: hidden;
+    }
+    .app{
+      display:grid;
+      grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+      height:100vh;
+    }
+    .sidebar{
+      width: var(--sidebar-width);
+      border-right:1px solid var(--line);
+      background: rgba(21,24,38,.55);
+      padding:16px;
+      overflow:auto;
+      transition: transform .18s ease, opacity .18s ease;
+    }
+    .app.sidebar-hidden{
+      grid-template-columns: 1fr;
+    }
+    .app.sidebar-hidden .sidebar{
+      transform: translateX(-100%);
+      opacity:0;
+      pointer-events:none;
+      width:0;
+      padding:0;
+      border-right:0;
+      overflow:hidden;
+    }
+    .app.sidebar-open .sidebar{
+      transform: translateX(0);
+      opacity:1;
+      pointer-events:auto;
+    }
+    .brand{
+      display:flex; gap:10px; align-items:center;
+      padding:10px 12px;
+      border:1px solid var(--line);
+      background: rgba(15,19,34,.65);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .brand .brandActions{
+      margin-left:auto;
+      display:flex;
+      gap:6px;
+    }
+    .sidebarToggle{
+      width:auto;
+      padding:6px 8px;
+      font-size:11px;
+      border-radius:10px;
+    }
+    .dot{
+      width:10px;height:10px;border-radius:50%;
+      background: var(--accent);
+      box-shadow: 0 0 16px rgba(124,92,255,.7);
+    }
+    .brand h1{font-size:14px;margin:0}
+    .brand p{margin:2px 0 0 0; font-size:12px; color: var(--muted)}
+    .panel{
+      margin-top:14px;
+      border:1px solid var(--line);
+      background: rgba(15,19,34,.65);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:12px;
+    }
+    .panel h2{
+      font-size:12px;
+      margin:0 0 10px 0;
+      color: var(--muted);
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+    label{
+      display:block;
+      font-size:12px;
+      color: var(--muted);
+      margin:10px 0 6px;
+    }
+    input, select, textarea, button{
+      width:100%;
+      border:1px solid var(--line);
+      background: rgba(11,13,18,.55);
+      color: var(--text);
+      border-radius: 10px;
+      padding:10px;
+      outline:none;
+      font-size:13px;
+    }
+    textarea{resize:vertical; min-height:70px; line-height:1.35;}
+    .row{display:flex; gap:10px}
+    .row > *{flex:1}
+    button{
+      cursor:pointer;
+      background: rgba(124,92,255,.12);
+      border:1px solid rgba(124,92,255,.35);
+      transition: .15s ease;
+    }
+    button:hover{transform: translateY(-1px); background: rgba(124,92,255,.18)}
+    button.secondary{
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+    }
+    button.danger{
+      background: rgba(237,66,69,.12);
+      border:1px solid rgba(237,66,69,.30);
+    }
+    .mini{
+      font-size:11px;
+      color: var(--muted);
+      margin-top:8px;
+      line-height:1.3;
+    }
+    .chips{
+      display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;
+    }
+    .chip{
+      font-size:11px;
+      padding:6px 9px;
+      border-radius: 999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.05);
+      color: var(--muted);
+      cursor:pointer;
+      user-select:none;
+    }
+    .chip.active{
+      border-color: rgba(124,92,255,.45);
+      color: var(--text);
+      background: rgba(124,92,255,.14);
+    }
+
+    /* MAIN CHAT */
+    .main{
+      display:flex;
+      flex-direction:column;
+      height:100vh;
+      min-width:0;
+    }
+    .topbar{
+      border-bottom:1px solid var(--line);
+      background: rgba(21,24,38,.55);
+      padding:14px 16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .sideToggle{
+      width:auto;
+      padding:8px 10px;
+      font-size:12px;
+      flex:0 0 auto;
+    }
+    .titleBlock{
+      display:flex;
+      flex-direction:column;
+      gap:3px;
+      min-width: 0;
+    }
+    .titleBlock .title{
+      font-size:14px;
+      font-weight:650;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .titleBlock .sub{
+      font-size:12px;
+      color: var(--muted);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .topActions{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .topActions button{
+      width:auto;
+      padding:8px 10px;
+      font-size:12px;
+    }
+
+    .chat{
+      flex:1;
+      overflow:auto;
+      padding:18px 16px 120px;
+      min-width:0;
+    }
+    .msg{
+      max-width: 880px;
+      margin: 0 auto 12px auto;
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+    }
+    .avatar{
+      width:34px; height:34px;
+      border-radius:12px;
+      background: rgba(255,255,255,.06);
+      border:1px solid var(--line);
+      flex: 0 0 34px;
+      display:grid;
+      place-items:center;
+      color: var(--muted);
+      font-weight:700;
+      font-size:12px;
+    }
+    .bubble{
+      flex:1;
+      border:1px solid var(--line);
+      background: rgba(15,19,34,.65);
+      border-radius: 16px;
+      padding: 12px 12px;
+      line-height:1.45;
+      box-shadow: 0 8px 24px rgba(0,0,0,.18);
+      white-space:normal;
+      word-break:break-word;
+    }
+    .bubble.user{
+      background: rgba(124,92,255,.10);
+      border-color: rgba(124,92,255,.30);
+    }
+    .bubble p{margin:0 0 8px}
+    .bubble p:last-child{margin-bottom:0}
+    .bubble ul, .bubble ol{
+      margin:6px 0 8px 18px;
+      padding:0;
+    }
+    .bubble li{margin:4px 0}
+    .bubble pre{
+      margin:8px 0;
+      background: rgba(0,0,0,.35);
+      border:1px solid var(--line);
+      padding:10px;
+      border-radius:10px;
+      overflow:auto;
+    }
+    .bubble code{
+      font-family: var(--mono);
+      background: rgba(255,255,255,.08);
+      padding:1px 4px;
+      border-radius:6px;
+      font-size:12px;
+    }
+    .bubble pre code{
+      background: transparent;
+      padding:0;
+      font-size:12px;
+    }
+    .bubble a{
+      color: var(--accent);
+      text-decoration:none;
+      border-bottom:1px solid rgba(124,92,255,.35);
+    }
+    .bubble a:hover{text-decoration:underline}
+    .metaLine{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      font-size:11px;
+      color: var(--muted);
+      margin-top:8px;
+    }
+    .metaLine .mono{font-family: var(--mono)}
+    .msgActions{
+      display:flex;
+      gap:6px;
+      justify-content:flex-end;
+      margin-top:6px;
+    }
+    .msgActions button{
+      width:auto;
+      padding:4px 8px;
+      font-size:11px;
+      border-radius:8px;
+      background: rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.12);
+      color: var(--muted);
+    }
+    .msgActions button:hover{
+      color: var(--text);
+      border-color: rgba(124,92,255,.35);
+    }
+    .variantNav{
+      display:flex;
+      gap:6px;
+      justify-content:flex-end;
+      align-items:center;
+      margin-top:6px;
+      font-size:11px;
+      color: var(--muted);
+    }
+    .variantNav button{
+      width:auto;
+      padding:2px 6px;
+      font-size:11px;
+      border-radius:8px;
+      background: rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.12);
+      color: var(--muted);
+    }
+    .variantNav button:hover{
+      color: var(--text);
+      border-color: rgba(124,92,255,.35);
+    }
+    .editBox{
+      width:100%;
+      min-height:80px;
+      border:1px solid var(--line);
+      background: rgba(11,13,18,.55);
+      color: var(--text);
+      border-radius:10px;
+      padding:10px;
+      font-size:13px;
+      line-height:1.35;
+      resize:vertical;
+    }
+    .editActions{
+      display:flex;
+      gap:8px;
+      justify-content:flex-end;
+      margin-top:6px;
+    }
+    .editActions button{
+      width:auto;
+      padding:4px 8px;
+      font-size:11px;
+      border-radius:8px;
+    }
+    .composer{
+      position:relative;
+      bottom:0;
+      padding:12px 14px 14px;
+      background: linear-gradient(180deg, rgba(11,13,18,0), rgba(11,13,18,.92) 40%, rgba(11,13,18,.98));
+      border-top:1px solid rgba(35,42,58,.35);
+      backdrop-filter: blur(8px);
+      flex-shrink:0;
+    }
+    .composerInner{
+      max-width: 920px;
+      margin:0 auto;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      align-items:stretch;
+    }
+    .composer textarea{
+      min-height: 52px;
+      max-height: 160px;
+      width:100%;
+    }
+    .inputRow{
+      display:flex;
+      gap:10px;
+      align-items:stretch;
+    }
+    .inputRow textarea{flex:1}
+    .sendBtn{
+      width:44px;
+      min-height:52px;
+      padding:0;
+      font-size:18px;
+      font-weight:700;
+    }
+    .btnRow{
+      display:flex;
+      gap:8px;
+    }
+    .btnRow button{
+      width:auto;
+      flex:1;
+    }
+    .status{
+      font-size:12px;
+      color: var(--muted);
+      margin-top:8px;
+      max-width:920px;
+      margin-left:auto;
+      margin-right:auto;
+    }
+    .kbd{
+      font-family: var(--mono);
+      font-size:11px;
+      padding:2px 6px;
+      border:1px solid var(--line);
+      border-radius:8px;
+      background: rgba(255,255,255,.04);
+      color: var(--muted);
+    }
+    @media (max-width: 980px){
+      .app{grid-template-columns: 1fr}
+      .sidebar{
+        position: fixed;
+        top:0;
+        bottom:0;
+        left:0;
+        width: min(360px, 88vw);
+        transform: translateX(-100%);
+        opacity:0;
+        pointer-events:none;
+        z-index:20;
+      }
+      .topbar{
+        flex-wrap:wrap;
+        align-items:flex-start;
+        justify-content:flex-start;
+      }
+      .sideToggle{order:1}
+      .titleBlock{
+        order:2;
+        flex:1 1 100%;
+        min-width:100%;
+      }
+      .topActions{
+        order:3;
+        width:100%;
+        justify-content:flex-start;
+      }
+      .btnRow{width:100%}
+      .composer{left:0}
+    }
+    @media (max-width: 720px){
+      .chat{padding:14px 12px 60px}
+    }
+    @media (max-width: 520px){
+      .panel{padding:10px}
+      .bubble{padding:10px}
+      .avatar{width:30px;height:30px; flex:0 0 30px; border-radius:10px}
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="dot"></div>
+      <div>
+        <h1>RP Chat Builder</h1>
+        <p>OpenRouter • Character Card • Lore • Memory</p>
+      </div>
+      <div class="brandActions">
+        <button class="secondary sidebarToggle" id="btnSidebarInside">Side View</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Connection</h2>
+
+      <div class="chips" id="modeChips">
+        <div class="chip active" data-mode="direct">Direct Mode</div>
+        <div class="chip" data-mode="proxy">Proxy Mode</div>
+      </div>
+
+      <div id="directFields">
+        <label>OpenRouter API Key (saved locally)</label>
+        <input id="apiKey" placeholder="sk-or-..." type="password" />
+
+        <label>App URL (optional header)</label>
+        <input id="siteUrl" placeholder="https://your-site.com" />
+
+        <label>App Name (optional header)</label>
+        <input id="appTitle" placeholder="My RP App" />
+        <div class="mini">OpenRouter supports optional attribution headers <span class="kbd">HTTP-Referer</span> and <span class="kbd">X-Title</span>. :contentReference[oaicite:1]{index=1}</div>
+      </div>
+
+      <div id="proxyFields" style="display:none">
+        <label>Proxy Base URL</label>
+        <input id="proxyBase" placeholder="https://your-worker.yourdomain.com" />
+        <div class="mini">Proxy Mode is the safe way to launch publicly. Frontend calls <span class="kbd">/api/chat</span> instead of OpenRouter directly.</div>
+      </div>
+
+      <div class="row" style="margin-top:10px">
+        <button class="secondary" id="btnTest">Test Connection</button>
+        <button id="btnLoadModels">Load Models</button>
+      </div>
+
+      <label>Model</label>
+      <select id="modelSelect">
+        <option value="">(load models or type below)</option>
+      </select>
+
+      <label>Or type model ID</label>
+      <input id="modelManual" placeholder="e.g. openai/gpt-5.2 or anthropic/claude-..." />
+
+      <div class="mini">Models list comes from <span class="kbd">GET https://openrouter.ai/api/v1/models</span>. :contentReference[oaicite:2]{index=2}</div>
+    </div>
+
+    <div class="panel">
+      <h2>Character Card</h2>
+      <label>Name</label>
+      <input id="charName" placeholder="e.g. Nyx the Vampire Queen" />
+
+      <label>Persona (who they are)</label>
+      <textarea id="charPersona" placeholder="Core personality, voice, quirks..."></textarea>
+
+      <label>Scenario / Setting</label>
+      <textarea id="charScenario" placeholder="Where are we? What’s happening?"></textarea>
+
+      <label>Style Rules</label>
+      <textarea id="charStyle" placeholder="Formatting & pacing rules (ex: no OOC, write in 1st person, vivid sensory detail, short lines...)"></textarea>
+
+      <label>Example Dialogue (optional)</label>
+      <textarea id="charExamples" placeholder="User: ...&#10;Assistant: ..."></textarea>
+
+      <div class="row" style="margin-top:10px">
+        <button class="secondary" id="btnSaveChar">Save Card</button>
+        <button class="danger" id="btnResetChar">Reset</button>
+      </div>
+
+      <div class="mini">This compiles into a System Prompt so replies stay in-character.</div>
+    </div>
+
+    <div class="panel">
+      <h2>Lorebook (simple)</h2>
+      <label>Lore Entries (JSON)</label>
+      <textarea id="loreJson" style="min-height:120px" placeholder='[
+  {"keys":["academy","principal"],"text":"The Academy is a fortress-school ruled by Principal Veyra."},
+  {"keys":["moonblade"],"text":"Moonblade is the only weapon that can cut shadow-kin."}
+]'></textarea>
+      <div class="mini">We’ll auto-inject lore entries when keywords show up in the last messages.</div>
+    </div>
+
+    <div class="panel">
+      <h2>Generation</h2>
+      <div class="row">
+        <div>
+          <label>Temperature</label>
+          <input id="temp" type="number" min="0" max="2" step="0.05" value="0.9"/>
+        </div>
+        <div>
+          <label>Max Tokens</label>
+          <input id="maxTokens" type="number" min="64" max="8192" step="64" value="600"/>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Top P</label>
+          <input id="topP" type="number" min="0" max="1" step="0.05" value="0.9"/>
+        </div>
+        <div>
+          <label>Presence Penalty</label>
+          <input id="presence" type="number" min="-2" max="2" step="0.1" value="0.2"/>
+        </div>
+      </div>
+
+      <label><input id="streamToggle" type="checkbox" checked style="width:auto; margin-right:8px"> Streaming</label>
+      <div class="mini">Streaming uses SSE chunks (<span class="kbd">stream: true</span>). :contentReference[oaicite:3]{index=3}</div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <button class="secondary sideToggle" id="btnSidebar">Side View</button>
+      <div class="titleBlock">
+        <div class="title" id="topTitle">New Chat</div>
+        <div class="sub" id="topSub">Not connected</div>
+      </div>
+      <div class="topActions">
+        <button class="secondary" id="btnExport">Export Chat</button>
+        <button class="secondary" id="btnImport">Import Chat</button>
+        <button class="danger" id="btnClear">Clear</button>
+      </div>
+    </div>
+
+    <div class="chat" id="chat"></div>
+
+    <div class="composer">
+      <div class="composerInner">
+        <div class="inputRow">
+          <textarea id="input" placeholder="Write your next message... (Shift+Enter = newline)"></textarea>
+          <button id="btnSend" class="sendBtn" aria-label="Send message">&gt;</button>
+        </div>
+        <div class="btnRow">
+          <button class="secondary" id="btnRegen">Regenerate</button>
+          <button class="danger" id="btnStop">Stop</button>
+        </div>
+      </div>
+      <div class="status" id="status">
+        Tip: <span class="kbd">Enter</span> sends • <span class="kbd">Shift</span>+<span class="kbd">Enter</span> newline
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+/* =========================
+   RP CHAT (OpenRouter)
+   - Direct Mode (api key in UI)
+   - Proxy Mode (calls your backend)
+   ========================= */
+
+const $ = (id)=>document.getElementById(id);
+
+const appEl = document.querySelector(".app");
+const chatEl = $("chat");
+const statusEl = $("status");
+const inputEl = $("input");
+
+let aborter = null;
+let editingIndex = null;
+
+const LS_KEY = "rpchat_state_v1";
+let state = loadState() || {
+  mode: "direct",
+  apiKey: "",
+  siteUrl: "",
+  appTitle: "RP Chat Builder",
+  proxyBase: "",
+  model: "",
+  modelManual: "",
+  sidebarOpen: true,
+  char: {
+    name: "Nyx",
+    persona: "A mysterious immortal with a playful, dangerous charm. Always stays in-character. Vivid, cinematic, emotionally charged.",
+    scenario: "A stormy night in a neon-lit city. You meet in a quiet lounge. Something ancient is waking beneath the streets.",
+    style: "Stay in-character. No OOC unless asked. Mix dialogue + sensory description. Keep tension high. Do not summarize.",
+    examples: ""
+  },
+  loreJson: `[
+  {"keys":["neon","city"],"text":"The city is called Vantaeon—where neon never sleeps and secrets have teeth."},
+  {"keys":["nyx"],"text":"Nyx feeds on fear and devotion, but prefers consent and slow-burn seduction over violence."}
+]`,
+  gen: {
+    temperature: 0.9,
+    max_tokens: 600,
+    top_p: 0.9,
+    presence_penalty: 0.2,
+    stream: true
+  },
+  messages: [
+    { role: "assistant", content: "…You’re late.\n\nNyx’s eyes glint in the lounge’s violet glow as thunder rumbles outside. “Tell me,” she purrs, “did you come here for answers… or trouble?”" }
+  ],
+  usage: null
+};
+
+if(state.sidebarOpen === undefined) state.sidebarOpen = true;
+
+renderAll();
+wireUI();
+
+function wireUI(){
+  // Mode chips
+  document.querySelectorAll("#modeChips .chip").forEach(chip=>{
+    chip.addEventListener("click", ()=>{
+      document.querySelectorAll("#modeChips .chip").forEach(c=>c.classList.remove("active"));
+      chip.classList.add("active");
+      state.mode = chip.dataset.mode;
+      updateModeFields();
+      saveState();
+      updateTopSub();
+    });
+  });
+
+  $("apiKey").addEventListener("input", e=>{ state.apiKey = e.target.value; saveState(); });
+  $("siteUrl").addEventListener("input", e=>{ state.siteUrl = e.target.value; saveState(); });
+  $("appTitle").addEventListener("input", e=>{ state.appTitle = e.target.value; saveState(); updateTopSub(); });
+  $("proxyBase").addEventListener("input", e=>{ state.proxyBase = e.target.value; saveState(); updateTopSub(); });
+
+  $("btnTest").addEventListener("click", testConnection);
+  $("btnLoadModels").addEventListener("click", loadModels);
+
+  $("modelSelect").addEventListener("change", e=>{
+    state.model = e.target.value;
+    $("modelManual").value = "";
+    state.modelManual = "";
+    saveState();
+    updateTopSub();
+  });
+  $("modelManual").addEventListener("input", e=>{
+    state.modelManual = e.target.value.trim();
+    if(state.modelManual) {
+      $("modelSelect").value = "";
+      state.model = "";
+    }
+    saveState();
+    updateTopSub();
+  });
+
+  // Character
+  $("charName").addEventListener("input", e=>{ state.char.name = e.target.value; saveState(); updateTopTitle(); });
+  $("charPersona").addEventListener("input", e=>{ state.char.persona = e.target.value; saveState(); });
+  $("charScenario").addEventListener("input", e=>{ state.char.scenario = e.target.value; saveState(); });
+  $("charStyle").addEventListener("input", e=>{ state.char.style = e.target.value; saveState(); });
+  $("charExamples").addEventListener("input", e=>{ state.char.examples = e.target.value; saveState(); });
+
+  $("btnSaveChar").addEventListener("click", ()=>{
+    toast("Character card saved ✅");
+    updateTopTitle();
+  });
+  $("btnResetChar").addEventListener("click", ()=>{
+    if(!confirm("Reset character card to defaults?")) return;
+    state.char = {
+      name: "Nyx",
+      persona: "",
+      scenario: "",
+      style: "",
+      examples: ""
+    };
+    renderSidebar();
+    saveState();
+    updateTopTitle();
+  });
+
+  // Lore
+  $("loreJson").addEventListener("input", e=>{
+    state.loreJson = e.target.value;
+    saveState();
+  });
+
+  // Generation controls
+  $("temp").addEventListener("input", e=>{ state.gen.temperature = parseFloat(e.target.value || "0.9"); saveState(); });
+  $("maxTokens").addEventListener("input", e=>{ state.gen.max_tokens = parseInt(e.target.value || "600", 10); saveState(); });
+  $("topP").addEventListener("input", e=>{ state.gen.top_p = parseFloat(e.target.value || "0.9"); saveState(); });
+  $("presence").addEventListener("input", e=>{ state.gen.presence_penalty = parseFloat(e.target.value || "0.2"); saveState(); });
+  $("streamToggle").addEventListener("change", e=>{ state.gen.stream = !!e.target.checked; saveState(); });
+
+  // Chat actions
+  $("btnClear").addEventListener("click", ()=>{
+    if(!confirm("Clear chat?")) return;
+    state.messages = [];
+    saveState();
+    renderChat();
+  });
+
+  $("btnExport").addEventListener("click", exportChat);
+  $("btnImport").addEventListener("click", importChat);
+  $("btnSidebar").addEventListener("click", toggleSidebar);
+  const sidebarInsideBtn = $("btnSidebarInside");
+  if(sidebarInsideBtn) sidebarInsideBtn.addEventListener("click", toggleSidebar);
+
+  $("btnSend").addEventListener("click", sendUserMessage);
+  $("btnRegen").addEventListener("click", regenerateLast);
+  $("btnStop").addEventListener("click", stopGeneration);
+
+  inputEl.addEventListener("keydown", (e)=>{
+    if(e.key === "Enter" && !e.shiftKey){
+      e.preventDefault();
+      sendUserMessage();
+    }
+  });
+}
+
+function updateModeFields(){
+  $("directFields").style.display = state.mode === "direct" ? "block" : "none";
+  $("proxyFields").style.display = state.mode === "proxy" ? "block" : "none";
+}
+
+function applySidebarState(){
+  if(state.sidebarOpen){
+    appEl.classList.add("sidebar-open");
+    appEl.classList.remove("sidebar-hidden");
+  }else{
+    appEl.classList.remove("sidebar-open");
+    appEl.classList.add("sidebar-hidden");
+  }
+}
+
+function toggleSidebar(){
+  state.sidebarOpen = !state.sidebarOpen;
+  applySidebarState();
+  saveState();
+}
+
+function renderAll(){
+  updateModeFields();
+  applySidebarState();
+  renderSidebar();
+  renderChat();
+  updateTopTitle();
+  updateTopSub();
+}
+
+function renderSidebar(){
+  $("apiKey").value = state.apiKey || "";
+  $("siteUrl").value = state.siteUrl || "";
+  $("appTitle").value = state.appTitle || "";
+  $("proxyBase").value = state.proxyBase || "";
+
+  $("charName").value = state.char.name || "";
+  $("charPersona").value = state.char.persona || "";
+  $("charScenario").value = state.char.scenario || "";
+  $("charStyle").value = state.char.style || "";
+  $("charExamples").value = state.char.examples || "";
+
+  $("loreJson").value = state.loreJson || "[]";
+
+  $("temp").value = state.gen.temperature ?? 0.9;
+  $("maxTokens").value = state.gen.max_tokens ?? 600;
+  $("topP").value = state.gen.top_p ?? 0.9;
+  $("presence").value = state.gen.presence_penalty ?? 0.2;
+  $("streamToggle").checked = !!state.gen.stream;
+}
+
+function renderChat(){
+  chatEl.innerHTML = "";
+  state.messages.forEach((m, idx)=>{
+    chatEl.appendChild(renderMessage(m, idx));
+  });
+  scrollToBottom();
+}
+
+function escapeHTML(str){
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function sanitizeUrl(url){
+  const trimmed = String(url || "").trim();
+  if(!trimmed) return "";
+  if(/^(https?:|mailto:)/i.test(trimmed)) return trimmed;
+  return "";
+}
+
+function renderMarkdown(md){
+  if(!md) return "";
+  let text = escapeHTML(md);
+
+  const codeBlocks = [];
+  text = text.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code)=>{
+    const cleanLang = (lang || "").trim().toLowerCase();
+    const safeLang = /^[a-z0-9+-]+$/.test(cleanLang) ? cleanLang : "";
+    const idx = codeBlocks.length;
+    codeBlocks.push({ lang: safeLang, code: code.replace(/\n$/, "") });
+    return `\n{{{CODEBLOCK_${idx}}}}\n`;
+  });
+
+  const inlineCodes = [];
+  text = text.replace(/`([^`\n]+)`/g, (match, code)=>{
+    const idx = inlineCodes.length;
+    inlineCodes.push(code);
+    return `{{{INLINECODE_${idx}}}}`;
+  });
+
+  text = text.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  text = text.replace(/__([^_]+)__/g, "<strong>$1</strong>");
+  text = text.replace(/\*([^*\n]+)\*/g, "<em>$1</em>");
+  text = text.replace(/_([^_\n]+)_/g, "<em>$1</em>");
+
+  text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, label, url)=>{
+    const safe = sanitizeUrl(url);
+    if(!safe) return `${label} (${url})`;
+    return `<a href="${safe}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+  });
+
+  const lines = text.split(/\r?\n/);
+  const out = [];
+  let inList = null;
+  let para = [];
+
+  const flushPara = ()=>{
+    if(para.length){
+      out.push(`<p>${para.join("<br>")}</p>`);
+      para = [];
+    }
+  };
+  const closeList = ()=>{
+    if(inList){
+      out.push(`</${inList}>`);
+      inList = null;
+    }
+  };
+
+  for(const line of lines){
+    const trimmed = line.trim();
+    const codeMatch = trimmed.match(/^\{\{\{CODEBLOCK_(\d+)\}\}\}$/);
+    if(codeMatch){
+      flushPara();
+      closeList();
+      out.push(trimmed);
+      continue;
+    }
+
+    const ulMatch = line.match(/^\s*[-*]\s+(.+)/);
+    const olMatch = line.match(/^\s*\d+\.\s+(.+)/);
+    if(ulMatch){
+      flushPara();
+      if(inList !== "ul"){
+        closeList();
+        inList = "ul";
+        out.push("<ul>");
+      }
+      out.push(`<li>${ulMatch[1].trim()}</li>`);
+      continue;
+    }
+    if(olMatch){
+      flushPara();
+      if(inList !== "ol"){
+        closeList();
+        inList = "ol";
+        out.push("<ol>");
+      }
+      out.push(`<li>${olMatch[1].trim()}</li>`);
+      continue;
+    }
+
+    if(trimmed === ""){
+      flushPara();
+      closeList();
+      continue;
+    }
+
+    closeList();
+    para.push(line);
+  }
+
+  flushPara();
+  closeList();
+
+  let html = out.join("\n");
+
+  html = html.replace(/\{\{\{CODEBLOCK_(\d+)\}\}\}/g, (match, idx)=>{
+    const block = codeBlocks[Number(idx)];
+    if(!block) return "";
+    const langClass = block.lang ? ` class="lang-${block.lang}"` : "";
+    return `<pre><code${langClass}>${block.code}</code></pre>`;
+  });
+
+  html = html.replace(/\{\{\{INLINECODE_(\d+)\}\}\}/g, (match, idx)=>{
+    const code = inlineCodes[Number(idx)];
+    return typeof code === "string" ? `<code>${code}</code>` : "";
+  });
+
+  return html;
+}
+
+function renderMessage(m, idx){
+  const wrap = document.createElement("div");
+  wrap.className = "msg";
+
+  const avatar = document.createElement("div");
+  avatar.className = "avatar";
+  avatar.textContent = m.role === "user" ? "U" : (state.char.name?.slice(0,1)?.toUpperCase() || "A");
+
+  const bubble = document.createElement("div");
+  bubble.className = "bubble " + (m.role === "user" ? "user" : "assistant");
+  const isEditing = editingIndex === idx;
+  if(isEditing){
+    const editBox = document.createElement("textarea");
+    editBox.className = "editBox";
+    editBox.value = m.content || "";
+    editBox.addEventListener("keydown", (e)=>{
+      if(e.key === "Escape"){
+        e.preventDefault();
+        cancelEditMessage();
+      }
+    });
+
+    const editActions = document.createElement("div");
+    editActions.className = "editActions";
+    const btnSave = document.createElement("button");
+    btnSave.textContent = "Save";
+    btnSave.addEventListener("click", ()=>saveEditMessage(idx, editBox.value));
+    const btnCancel = document.createElement("button");
+    btnCancel.className = "secondary";
+    btnCancel.textContent = "Cancel";
+    btnCancel.addEventListener("click", cancelEditMessage);
+
+    editActions.appendChild(btnSave);
+    editActions.appendChild(btnCancel);
+    bubble.appendChild(editBox);
+    bubble.appendChild(editActions);
+  }else{
+    bubble.innerHTML = renderMarkdown(m.content || "");
+  }
+
+  // meta
+  const meta = document.createElement("div");
+  meta.className = "metaLine";
+  const left = document.createElement("div");
+  left.textContent = m.role === "user" ? "You" : state.char.name || "Assistant";
+  const right = document.createElement("div");
+  right.className = "mono";
+  right.textContent = m._streaming ? "streaming..." : "";
+
+  meta.appendChild(left);
+  meta.appendChild(right);
+
+  bubble.appendChild(meta);
+
+  if(!isEditing && !m._streaming){
+    const actions = document.createElement("div");
+    actions.className = "msgActions";
+
+    const btnEdit = document.createElement("button");
+    btnEdit.textContent = "Edit";
+    btnEdit.addEventListener("click", (e)=>{
+      e.stopPropagation();
+      startEditMessage(idx);
+    });
+
+    const btnGen = document.createElement("button");
+    btnGen.textContent = m.role === "assistant" ? "Regenerate" : "Generate";
+    btnGen.addEventListener("click", (e)=>{
+      e.stopPropagation();
+      regenerateFromIndex(idx);
+    });
+
+    const btnDelete = document.createElement("button");
+    btnDelete.textContent = "Delete";
+    btnDelete.addEventListener("click", (e)=>{
+      e.stopPropagation();
+      deleteMessage(idx);
+    });
+
+    actions.appendChild(btnEdit);
+    actions.appendChild(btnGen);
+    actions.appendChild(btnDelete);
+    bubble.appendChild(actions);
+  }
+
+  if(!isEditing && !m._streaming && m.role === "assistant" && Array.isArray(m._variants) && m._variants.length > 1){
+    const nav = document.createElement("div");
+    nav.className = "variantNav";
+    const btnPrev = document.createElement("button");
+    btnPrev.textContent = "<";
+    btnPrev.addEventListener("click", (e)=>{
+      e.stopPropagation();
+      cycleVariant(idx, -1);
+    });
+    const label = document.createElement("div");
+    label.textContent = `${(m._variantIndex || 0) + 1} / ${m._variants.length}`;
+    const btnNext = document.createElement("button");
+    btnNext.textContent = ">";
+    btnNext.addEventListener("click", (e)=>{
+      e.stopPropagation();
+      cycleVariant(idx, 1);
+    });
+
+    nav.appendChild(btnPrev);
+    nav.appendChild(label);
+    nav.appendChild(btnNext);
+    bubble.appendChild(nav);
+  }
+
+  wrap.appendChild(avatar);
+  wrap.appendChild(bubble);
+
+  return wrap;
+}
+
+function updateTopTitle(){
+  $("topTitle").textContent = state.char.name ? `${state.char.name} — RP Chat` : "RP Chat";
+}
+function updateTopSub(){
+  const model = getModel();
+  const modeLabel = state.mode === "direct" ? "Direct (key in browser)" : "Proxy (safe)";
+  $("topSub").textContent = `${modeLabel} • Model: ${model || "(none)"}`;
+}
+
+function getModel(){
+  return state.modelManual || state.model || "";
+}
+
+function toast(msg){
+  statusEl.textContent = msg;
+  setTimeout(()=>{ statusEl.textContent = "Tip: Enter sends • Shift+Enter newline"; }, 2200);
+}
+
+function scrollToBottom(){
+  chatEl.scrollTop = chatEl.scrollHeight;
+}
+
+function stopGeneration(){
+  if(aborter){
+    aborter.abort();
+    aborter = null;
+    toast("Stopped ✋");
+    // clear streaming flags
+    state.messages.forEach(m=>delete m._streaming);
+    renderChat();
+  }
+}
+
+function ensureVariants(msg){
+  if(!msg || msg.role !== "assistant") return;
+  if(!Array.isArray(msg._variants) || msg._variants.length === 0){
+    msg._variants = [msg.content || ""];
+    msg._variantIndex = 0;
+  }else if(typeof msg._variantIndex !== "number" || msg._variantIndex < 0 || msg._variantIndex >= msg._variants.length){
+    msg._variantIndex = msg._variants.length - 1;
+  }
+}
+
+function finalizeAssistantMessage(msg){
+  if(!msg || msg.role !== "assistant") return;
+  if(!Array.isArray(msg._variants)) msg._variants = [];
+  msg._variants.push(msg.content || "");
+  msg._variantIndex = msg._variants.length - 1;
+}
+
+function cycleVariant(idx, dir){
+  const msg = state.messages[idx];
+  if(!msg || msg.role !== "assistant") return;
+  ensureVariants(msg);
+  if(msg._variants.length < 2) return;
+  let next = msg._variantIndex + dir;
+  if(next < 0) next = msg._variants.length - 1;
+  if(next >= msg._variants.length) next = 0;
+  msg._variantIndex = next;
+  msg.content = msg._variants[next] || "";
+  saveState();
+  renderChat();
+}
+
+async function sendUserMessage(){
+  const text = inputEl.value.trim();
+  if(!text) return;
+
+  inputEl.value = "";
+
+  state.messages.push({ role:"user", content: text });
+  saveState();
+  renderChat();
+
+  await generateAssistantReply();
+}
+
+async function regenerateLast(){
+  // remove last assistant message if it exists
+  for(let i = state.messages.length - 1; i >= 0; i--){
+    if(state.messages[i].role === "assistant"){
+      await regenerateFromIndex(i);
+      return;
+    }
+    if(state.messages[i].role === "user") break;
+  }
+}
+
+function startEditMessage(idx){
+  const msg = state.messages[idx];
+  if(!msg || msg._streaming) return;
+  editingIndex = idx;
+  renderChat();
+}
+
+function deleteMessage(idx){
+  if(idx < 0 || idx >= state.messages.length) return;
+  if(!confirm("Delete this message?")) return;
+  state.messages.splice(idx, 1);
+  if(editingIndex === idx) editingIndex = null;
+  saveState();
+  renderChat();
+}
+
+function saveEditMessage(idx, next){
+  const msg = state.messages[idx];
+  if(!msg) return;
+  msg.content = next;
+  if(msg.role === "assistant"){
+    ensureVariants(msg);
+    const vi = msg._variantIndex ?? (msg._variants.length - 1);
+    msg._variants[vi] = next;
+    msg._variantIndex = vi;
+  }
+  editingIndex = null;
+  saveState();
+  renderChat();
+}
+
+function cancelEditMessage(){
+  editingIndex = null;
+  renderChat();
+}
+
+async function regenerateFromIndex(idx){
+  if(idx < 0 || idx >= state.messages.length) return;
+  const target = state.messages[idx];
+  if(!target || target._streaming) return;
+
+  const keepCount = target.role === "assistant" ? idx + 1 : idx + 1;
+  state.messages = state.messages.slice(0, keepCount);
+
+  if(target.role === "assistant"){
+    ensureVariants(target);
+    target._streaming = true;
+    target.content = "";
+    saveState();
+    renderChat();
+    await generateAssistantReply({ assistantMsg: target });
+    return;
+  }
+
+  const assistantMsg = { role:"assistant", content:"", _streaming:true };
+  state.messages.push(assistantMsg);
+  saveState();
+  renderChat();
+  await generateAssistantReply({ assistantMsg });
+}
+
+function buildSystemPrompt(){
+  const c = state.char || {};
+  const lines = [];
+
+  lines.push(`You are roleplaying as "${c.name || "Assistant"}".`);
+  lines.push(`Never mention being an AI or policies. Stay fully in character.`);
+  lines.push(`No out-of-character commentary unless the user explicitly asks for OOC.`);
+  lines.push("");
+
+  if(c.persona?.trim()){
+    lines.push("PERSONA:");
+    lines.push(c.persona.trim());
+    lines.push("");
+  }
+  if(c.scenario?.trim()){
+    lines.push("SCENARIO:");
+    lines.push(c.scenario.trim());
+    lines.push("");
+  }
+  if(c.style?.trim()){
+    lines.push("STYLE RULES:");
+    lines.push(c.style.trim());
+    lines.push("");
+  }
+  if(c.examples?.trim()){
+    lines.push("EXAMPLE DIALOGUE:");
+    lines.push(c.examples.trim());
+    lines.push("");
+  }
+
+  lines.push("IMPORTANT:");
+  lines.push("- Keep the roleplay immersive.");
+  lines.push("- Maintain continuity and emotional realism.");
+  lines.push("- If the user asks to change tone/pace, obey.");
+
+  return lines.join("\n");
+}
+
+function safeParseLore(){
+  try{
+    const arr = JSON.parse(state.loreJson || "[]");
+    return Array.isArray(arr) ? arr : [];
+  }catch{
+    return [];
+  }
+}
+
+function pickLoreSnippets(){
+  const lore = safeParseLore();
+  if(!lore.length) return [];
+
+  // Search last few messages for keywords
+  const recent = state.messages.slice(-8).map(m=>m.content || "").join("\n").toLowerCase();
+
+  const hits = [];
+  for(const entry of lore){
+    const keys = (entry.keys || []).map(k=>String(k).toLowerCase()).filter(Boolean);
+    const text = String(entry.text || "").trim();
+    if(!keys.length || !text) continue;
+
+    if(keys.some(k => recent.includes(k))){
+      hits.push(text);
+    }
+  }
+
+  // de-dupe
+  return [...new Set(hits)].slice(0, 6);
+}
+
+function buildMessagesForAPI(){
+  const systemPrompt = buildSystemPrompt();
+
+  const loreSnips = pickLoreSnippets();
+  const loreBlock = loreSnips.length
+    ? "WORLD LORE (only use if relevant):\n- " + loreSnips.join("\n- ")
+    : "";
+
+  const sys = [
+    { role:"system", content: systemPrompt },
+    ...(loreBlock ? [{ role:"system", content: loreBlock }] : [])
+  ];
+
+  // Keep last N messages for context
+  const history = state.messages
+    .slice(-30)
+    .filter(m => m.role !== "assistant" || (m.content && m.content.trim().length > 0))
+    .map(m => ({ role: m.role, content: m.content }));
+
+  return [...sys, ...history];
+}
+
+async function generateAssistantReply(options = {}){
+  const model = getModel();
+  if(!model){
+    toast("Pick a model first (Load Models) ⚠️");
+    return;
+  }
+  if(state.mode === "direct" && !state.apiKey){
+    toast("Paste your OpenRouter API key ⚠️");
+    return;
+  }
+  if(state.mode === "proxy" && !state.proxyBase){
+    toast("Set Proxy Base URL ⚠️");
+    return;
+  }
+
+  // Create placeholder assistant message for streaming UI
+  const assistantMsg = options.assistantMsg || { role:"assistant", content:"", _streaming:true };
+  if(!options.assistantMsg){
+    state.messages.push(assistantMsg);
+  }else{
+    assistantMsg._streaming = true;
+  }
+  saveState();
+  renderChat();
+
+  aborter = new AbortController();
+
+  const payload = {
+    model,
+    messages: buildMessagesForAPI(),
+    temperature: state.gen.temperature,
+    max_tokens: state.gen.max_tokens,
+    top_p: state.gen.top_p,
+    presence_penalty: state.gen.presence_penalty,
+    stream: !!state.gen.stream
+  };
+
+  try{
+    if(payload.stream){
+      await callChatStream(payload, (delta)=>{
+        assistantMsg.content += delta;
+        saveState();
+        renderChat(); // simple + reliable; you can optimize later
+      });
+    }else{
+      const full = await callChat(payload);
+      assistantMsg.content = full;
+      saveState();
+      renderChat();
+    }
+
+    assistantMsg._streaming = false;
+    finalizeAssistantMessage(assistantMsg);
+    saveState();
+    renderChat();
+    toast("Done ✅");
+  }catch(err){
+    assistantMsg._streaming = false;
+    assistantMsg.content = assistantMsg.content || "";
+    saveState();
+    renderChat();
+
+    toast("Error: " + (err?.message || String(err)));
+  }finally{
+    aborter = null;
+    scrollToBottom();
+  }
+}
+
+function buildHeaders(apiKey){
+  const headers = {
+    "Content-Type":"application/json",
+    "Authorization": "Bearer " + apiKey,
+  };
+  // Optional attribution headers
+  if(state.siteUrl?.trim()) headers["HTTP-Referer"] = state.siteUrl.trim();
+  if(state.appTitle?.trim()) headers["X-Title"] = state.appTitle.trim();
+  return headers;
+}
+
+async function callChat(payload){
+  const url = state.mode === "direct"
+    ? "https://openrouter.ai/api/v1/chat/completions"
+    : (state.proxyBase.replace(/\/$/,"") + "/api/chat");
+
+  const res = await fetch(url, {
+    method:"POST",
+    headers: state.mode === "direct" ? buildHeaders(state.apiKey) : {"Content-Type":"application/json"},
+    body: JSON.stringify(payload),
+    signal: aborter?.signal
+  });
+
+  if(!res.ok){
+    const text = await res.text().catch(()=>"(no body)");
+    throw new Error(`HTTP ${res.status}: ${text}`);
+  }
+
+  const data = await res.json();
+  const msg = data?.choices?.[0]?.message?.content;
+  if(typeof msg !== "string") throw new Error("Bad response shape (no choices[0].message.content)");
+  return msg;
+}
+
+async function callChatStream(payload, onDelta){
+  const url = state.mode === "direct"
+    ? "https://openrouter.ai/api/v1/chat/completions"
+    : (state.proxyBase.replace(/\/$/,"") + "/api/chat");
+
+  const res = await fetch(url, {
+    method:"POST",
+    headers: state.mode === "direct" ? buildHeaders(state.apiKey) : {"Content-Type":"application/json"},
+    body: JSON.stringify(payload),
+    signal: aborter?.signal
+  });
+
+  if(!res.ok){
+    const text = await res.text().catch(()=>"(no body)");
+    throw new Error(`HTTP ${res.status}: ${text}`);
+  }
+
+  // SSE text/event-stream
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder("utf-8");
+  let buffer = "";
+
+  while(true){
+    const {value, done} = await reader.read();
+    if(done) break;
+
+    buffer += decoder.decode(value, {stream:true});
+    const lines = buffer.split("\n");
+    buffer = lines.pop() || "";
+
+    for(const line of lines){
+      const l = line.trim();
+
+      // ignore comments/keep-alives
+      if(!l || l.startsWith(":")) continue;
+
+      if(l.startsWith("data:")){
+        const dataStr = l.slice(5).trim();
+        if(dataStr === "[DONE]") return;
+
+        let obj;
+        try{
+          obj = JSON.parse(dataStr);
+        }catch{
+          continue;
+        }
+
+        const choice = obj?.choices?.[0];
+        // streaming chunk: choices[0].delta.content :contentReference[oaicite:4]{index=4}
+        const delta = choice?.delta?.content;
+        const err = choice?.error;
+
+        if(err){
+          throw new Error(err.message || "Stream error");
+        }
+        if(typeof delta === "string" && delta.length){
+          onDelta(delta);
+        }
+      }
+    }
+  }
+}
+
+/* MODELS */
+async function loadModels(){
+  try{
+    toast("Loading models…");
+    const models = await fetchModels();
+    const select = $("modelSelect");
+    select.innerHTML = `<option value="">(select a model)</option>`;
+
+    // sort by name
+    models.sort((a,b)=>String(a.id).localeCompare(String(b.id)));
+
+    for(const m of models.slice(0, 400)){
+      const opt = document.createElement("option");
+      opt.value = m.id;
+      opt.textContent = m.id;
+      select.appendChild(opt);
+    }
+    toast(`Loaded ${models.length} models ✅`);
+  }catch(err){
+    toast("Models error: " + (err?.message || String(err)));
+  }
+}
+
+async function fetchModels(){
+  if(state.mode === "direct" && !state.apiKey) throw new Error("Paste your API key first.");
+  if(state.mode === "proxy" && !state.proxyBase) throw new Error("Set Proxy Base URL first.");
+
+  const url = state.mode === "direct"
+    ? "https://openrouter.ai/api/v1/models"
+    : (state.proxyBase.replace(/\/$/,"") + "/api/models");
+
+  const res = await fetch(url, {
+    headers: state.mode === "direct" ? buildHeaders(state.apiKey) : {}
+  });
+
+  if(!res.ok){
+    const text = await res.text().catch(()=>"(no body)");
+    throw new Error(`HTTP ${res.status}: ${text}`);
+  }
+
+  const data = await res.json();
+  const arr = data?.data || data?.models || [];
+  return arr.map(x=>({ id: x.id || x.model || x.name || "" })).filter(x=>x.id);
+}
+
+async function testConnection(){
+  try{
+    toast("Testing…");
+    // lightweight call: load models list head
+    const models = await fetchModels();
+    toast(`Connected ✅ (models: ${models.length})`);
+    updateTopSub();
+  }catch(err){
+    toast("Connection failed: " + (err?.message || String(err)));
+  }
+}
+
+/* EXPORT / IMPORT */
+function exportChat(){
+  const blob = new Blob([JSON.stringify({
+    char: state.char,
+    loreJson: state.loreJson,
+    gen: state.gen,
+    messages: state.messages
+  }, null, 2)], {type:"application/json"});
+
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `rpchat_${(state.char.name||"chat").toLowerCase().replace(/\s+/g,"_")}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function importChat(){
+  const inp = document.createElement("input");
+  inp.type = "file";
+  inp.accept = "application/json";
+  inp.onchange = async ()=>{
+    const file = inp.files?.[0];
+    if(!file) return;
+    const text = await file.text();
+    const obj = JSON.parse(text);
+
+    if(obj.char) state.char = obj.char;
+    if(obj.loreJson) state.loreJson = obj.loreJson;
+    if(obj.gen) state.gen = obj.gen;
+    if(Array.isArray(obj.messages)) state.messages = obj.messages;
+
+    saveState();
+    renderAll();
+    toast("Imported ✅");
+  };
+  inp.click();
+}
+
+/* STORAGE */
+function saveState(){
+  localStorage.setItem(LS_KEY, JSON.stringify(state));
+}
+function loadState(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    return raw ? JSON.parse(raw) : null;
+  }catch{
+    return null;
+  }
+}
+</script>
+</body>
+</html>
