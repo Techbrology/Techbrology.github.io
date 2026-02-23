@@ -6,27 +6,30 @@
   <title>RP Chat (OpenRouter)</title>
   <style>
     :root{
-      --bg0:#0b0d12;
-      --bg1:#0f1117;
-      --bg2:#151826;
-      --card:#0f1322;
-      --line:#232a3a;
-      --text:#e7e7e7;
-      --muted:#9aa4b2;
-      --accent:#7c5cff;
-      --good:#3ba55d;
-      --warn:#faa61a;
-      --bad:#ed4245;
-      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --bg0:#2b2219;
+      --bg1:#32271d;
+      --bg2:#3a2e23;
+      --card:#3f3226;
+      --line:#5e4a38;
+      --text:#f1e4d2;
+      --muted:#c2b09a;
+      --accent:#d8a463;
+      --good:#7aa06b;
+      --warn:#c59a55;
+      --bad:#c06a5b;
+      --shadow: 0 10px 30px rgba(10,7,5,.55);
       --radius: 14px;
       --sidebar-width: clamp(260px, 28vw, 420px);
       --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --glass-bg: rgba(63,50,38,.64);
+      --glass-border: rgba(216,200,178,.28);
+      --glass-highlight: rgba(255,235,206,.16);
     }
     *{box-sizing:border-box}
     body{
       margin:0;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      background: linear-gradient(180deg, var(--bg0), var(--bg1));
+      background: var(--bg0);
       color: var(--text);
       height: 100vh;
       overflow: hidden;
@@ -35,14 +38,33 @@
       display:grid;
       grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
       height:100vh;
+      box-shadow: inset 0 0 0 1px var(--line);
+    }
+    .sidebarBackdrop{
+      position:fixed;
+      inset:0;
+      background: rgba(0,0,0,.25);
+      opacity:0;
+      pointer-events:none;
+      transition: opacity .18s ease;
+      z-index:15;
     }
     .sidebar{
       width: var(--sidebar-width);
       border-right:1px solid var(--line);
-      background: rgba(21,24,38,.55);
-      padding:16px;
-      overflow:auto;
+      background:
+        linear-gradient(160deg, rgba(255,235,206,.08), rgba(0,0,0,0) 45%),
+        linear-gradient(200deg, rgba(216,164,99,.12), rgba(58,45,34,.65));
+      overflow:visible;
       transition: transform .18s ease, opacity .18s ease;
+      position:relative;
+      z-index:16;
+      box-shadow: inset 0 1px 0 rgba(255,235,206,.18), var(--shadow);
+    }
+    .sidebarScroll{
+      height:100%;
+      overflow:auto;
+      padding:14px 16px 16px 16px;
     }
     .app.sidebar-hidden{
       grid-template-columns: 1fr;
@@ -56,8 +78,16 @@
       border-right:0;
       overflow:hidden;
     }
+    .app.sidebar-hidden .sidebarScroll{
+      padding:0;
+      overflow:hidden;
+    }
     .app.sidebar-open .sidebar{
       transform: translateX(0);
+      opacity:1;
+      pointer-events:auto;
+    }
+    .app.sidebar-open .sidebarBackdrop{
       opacity:1;
       pointer-events:auto;
     }
@@ -65,35 +95,153 @@
       display:flex; gap:10px; align-items:center;
       padding:10px 12px;
       border:1px solid var(--line);
-      background: rgba(15,19,34,.65);
+      background:
+        linear-gradient(160deg, rgba(255,235,206,.1), rgba(0,0,0,0) 45%),
+        rgba(63,50,38,.85);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
     }
-    .brand .brandActions{
-      margin-left:auto;
-      display:flex;
-      gap:6px;
-    }
     .sidebarToggle{
       width:auto;
-      padding:6px 8px;
-      font-size:11px;
+      padding:8px 10px;
+      font-size:12px;
       border-radius:10px;
     }
-    .dot{
-      width:10px;height:10px;border-radius:50%;
-      background: var(--accent);
-      box-shadow: 0 0 16px rgba(124,92,255,.7);
+    .sidebarEdgeToggle{
+      position:static;
+      margin:0 0 12px 0;
+      align-self:flex-start;
+    }
+    .brandLogo{
+      width:70px;
+      height:70px;
+      border-radius:8px;
+      object-fit:contain;
+      background: rgba(58,45,34,.9);
+      border:1px solid var(--line);
+      padding:0;
     }
     .brand h1{font-size:14px;margin:0}
     .brand p{margin:2px 0 0 0; font-size:12px; color: var(--muted)}
     .panel{
       margin-top:14px;
       border:1px solid var(--line);
-      background: rgba(15,19,34,.65);
+      background:
+        linear-gradient(160deg, rgba(255,235,206,.08), rgba(0,0,0,0) 45%),
+        rgba(63,50,38,.82);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       padding:12px;
+    }
+    .panelHeader{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+    }
+    .panelToggle{
+      width:auto;
+      padding:6px 8px;
+      font-size:11px;
+      border-radius:8px;
+    }
+    .panelBody{margin-top:8px;}
+    .tabs{
+      margin-top:12px;
+      display:flex;
+      gap:8px;
+    }
+    .tab{
+      width:auto;
+      padding:8px 10px;
+      font-size:12px;
+      border-radius:10px;
+      border:1px solid var(--line);
+      background: rgba(58,45,34,.9);
+      color: var(--muted);
+      cursor:pointer;
+    }
+    .tab.active{
+      color: var(--text);
+      border-color: rgba(216,164,99,.45);
+      background: rgba(216,164,99,.18);
+    }
+    .chatList{
+      margin-top:10px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .characterList{
+      margin-top:10px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .charCard{
+      border:1px solid var(--line);
+      border-radius:10px;
+      background: rgba(58,45,34,.7);
+      padding:10px;
+    }
+    .charHeader{
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+    .charNameInput{
+      flex:1;
+      min-width:0;
+    }
+    .charActions{
+      display:flex;
+      gap:6px;
+      align-items:center;
+    }
+    .charToggle, .charDelete{
+      width:auto;
+      padding:4px 6px;
+      font-size:11px;
+      border-radius:8px;
+    }
+    .charBody{margin-top:8px;}
+    .chatItem{
+      display:flex;
+      gap:8px;
+      align-items:flex-start;
+      padding:8px;
+      border:1px solid var(--line);
+      border-radius:10px;
+      background: rgba(58,45,34,.7);
+      cursor:pointer;
+    }
+    .chatItem.active{
+      border-color: rgba(216,164,99,.45);
+      background: rgba(216,164,99,.14);
+    }
+    .chatInfo{flex:1; min-width:0}
+    .chatTitle{
+      font-size:12px;
+      font-weight:650;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .chatMeta{
+      font-size:11px;
+      color: var(--muted);
+      margin-top:4px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .chatDelete{
+      width:auto;
+      padding:4px 6px;
+      font-size:11px;
+      border-radius:8px;
+      background: rgba(58,45,34,.75);
+      border:1px solid rgba(216,200,178,.2);
     }
     .panel h2{
       font-size:12px;
@@ -111,7 +259,7 @@
     input, select, textarea, button{
       width:100%;
       border:1px solid var(--line);
-      background: rgba(11,13,18,.55);
+      background: rgba(58,45,34,.82);
       color: var(--text);
       border-radius: 10px;
       padding:10px;
@@ -123,18 +271,35 @@
     .row > *{flex:1}
     button{
       cursor:pointer;
-      background: rgba(124,92,255,.12);
-      border:1px solid rgba(124,92,255,.35);
+      background: rgba(216,164,99,.18);
+      border:1px solid rgba(216,164,99,.45);
       transition: .15s ease;
     }
-    button:hover{transform: translateY(-1px); background: rgba(124,92,255,.18)}
+    button:hover{transform: translateY(-1px); background: rgba(216,164,99,.26)}
+    .sidebar button,
+    .sidebar .tab,
+    .sidebar .chip,
+    .sidebar .chatItem{
+      transition: transform .15s ease, background-color .15s ease, border-color .15s ease, box-shadow .15s ease;
+      will-change: transform;
+    }
+    @media (hover: hover) and (pointer: fine){
+      .sidebar button:hover,
+      .sidebar .tab:hover,
+      .sidebar .chip:hover,
+      .sidebar .chatItem:hover{
+        transform: translateY(-1px);
+        box-shadow: 0 8px 18px rgba(10,7,5,.28);
+      }
+    }
+
     button.secondary{
-      background: rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.12);
+      background: rgba(58,45,34,.75);
+      border:1px solid rgba(216,200,178,.2);
     }
     button.danger{
-      background: rgba(237,66,69,.12);
-      border:1px solid rgba(237,66,69,.30);
+      background: rgba(192,106,91,.16);
+      border:1px solid rgba(192,106,91,.38);
     }
     .mini{
       font-size:11px;
@@ -150,15 +315,15 @@
       padding:6px 9px;
       border-radius: 999px;
       border:1px solid var(--line);
-      background: rgba(255,255,255,.05);
+      background: rgba(58,45,34,.8);
       color: var(--muted);
       cursor:pointer;
       user-select:none;
     }
     .chip.active{
-      border-color: rgba(124,92,255,.45);
+      border-color: rgba(216,164,99,.45);
       color: var(--text);
-      background: rgba(124,92,255,.14);
+      background: rgba(216,164,99,.18);
     }
 
     /* MAIN CHAT */
@@ -170,7 +335,7 @@
     }
     .topbar{
       border-bottom:1px solid var(--line);
-      background: rgba(21,24,38,.55);
+      background: rgba(58,45,34,.92);
       padding:14px 16px;
       display:flex;
       align-items:center;
@@ -231,7 +396,7 @@
     .avatar{
       width:34px; height:34px;
       border-radius:12px;
-      background: rgba(255,255,255,.06);
+      background: rgba(88,70,54,.6);
       border:1px solid var(--line);
       flex: 0 0 34px;
       display:grid;
@@ -243,17 +408,17 @@
     .bubble{
       flex:1;
       border:1px solid var(--line);
-      background: rgba(15,19,34,.65);
+      background: rgba(63,50,38,.9);
       border-radius: 16px;
       padding: 12px 12px;
       line-height:1.45;
-      box-shadow: 0 8px 24px rgba(0,0,0,.18);
+      box-shadow: 0 8px 24px rgba(58,45,34,.12);
       white-space:normal;
       word-break:break-word;
     }
     .bubble.user{
-      background: rgba(124,92,255,.10);
-      border-color: rgba(124,92,255,.30);
+      background: rgba(216,164,99,.2);
+      border-color: rgba(216,164,99,.4);
     }
     .bubble p{margin:0 0 8px}
     .bubble p:last-child{margin-bottom:0}
@@ -264,7 +429,7 @@
     .bubble li{margin:4px 0}
     .bubble pre{
       margin:8px 0;
-      background: rgba(0,0,0,.35);
+      background: rgba(0,0,0,.25);
       border:1px solid var(--line);
       padding:10px;
       border-radius:10px;
@@ -272,7 +437,7 @@
     }
     .bubble code{
       font-family: var(--mono);
-      background: rgba(255,255,255,.08);
+      background: rgba(0,0,0,.25);
       padding:1px 4px;
       border-radius:6px;
       font-size:12px;
@@ -285,7 +450,7 @@
     .bubble a{
       color: var(--accent);
       text-decoration:none;
-      border-bottom:1px solid rgba(124,92,255,.35);
+      border-bottom:1px solid rgba(216,164,99,.45);
     }
     .bubble a:hover{text-decoration:underline}
     .metaLine{
@@ -308,13 +473,13 @@
       padding:4px 8px;
       font-size:11px;
       border-radius:8px;
-      background: rgba(255,255,255,.04);
-      border:1px solid rgba(255,255,255,.12);
+      background: rgba(58,45,34,.8);
+      border:1px solid rgba(216,200,178,.2);
       color: var(--muted);
     }
     .msgActions button:hover{
       color: var(--text);
-      border-color: rgba(124,92,255,.35);
+      border-color: rgba(216,164,99,.45);
     }
     .variantNav{
       display:flex;
@@ -330,24 +495,25 @@
       padding:2px 6px;
       font-size:11px;
       border-radius:8px;
-      background: rgba(255,255,255,.04);
-      border:1px solid rgba(255,255,255,.12);
+      background: rgba(58,45,34,.8);
+      border:1px solid rgba(216,200,178,.2);
       color: var(--muted);
     }
     .variantNav button:hover{
       color: var(--text);
-      border-color: rgba(124,92,255,.35);
+      border-color: rgba(216,164,99,.45);
     }
     .editBox{
       width:100%;
-      min-height:80px;
+      min-height:0;
       border:1px solid var(--line);
-      background: rgba(11,13,18,.55);
+      background: rgba(58,45,34,.95);
       color: var(--text);
       border-radius:10px;
       padding:10px;
-      font-size:13px;
-      line-height:1.35;
+      font-size:inherit;
+      line-height:1.45;
+      overflow:hidden;
       resize:vertical;
     }
     .editActions{
@@ -366,8 +532,8 @@
       position:relative;
       bottom:0;
       padding:12px 14px 14px;
-      background: linear-gradient(180deg, rgba(11,13,18,0), rgba(11,13,18,.92) 40%, rgba(11,13,18,.98));
-      border-top:1px solid rgba(35,42,58,.35);
+      background: linear-gradient(180deg, rgba(43,34,25,0), rgba(43,34,25,.9) 40%, rgba(43,34,25,.98));
+      border-top:1px solid rgba(94,74,56,.6);
       backdrop-filter: blur(8px);
       flex-shrink:0;
     }
@@ -419,7 +585,7 @@
       padding:2px 6px;
       border:1px solid var(--line);
       border-radius:8px;
-      background: rgba(255,255,255,.04);
+      background: rgba(58,45,34,.85);
       color: var(--muted);
     }
     @media (max-width: 980px){
@@ -468,19 +634,31 @@
 <div class="app">
   <!-- SIDEBAR -->
   <aside class="sidebar">
-    <div class="brand">
-      <div class="dot"></div>
-      <div>
-        <h1>RP Chat Builder</h1>
-        <p>OpenRouter • Character Card • Lore • Memory</p>
+    <div class="sidebarScroll">
+      <button class="secondary sidebarToggle sidebarEdgeToggle" id="btnSidebarInside">Side View</button>
+      <div class="brand">
+        <img src="logo.png" class="brandLogo" alt="Logo" />
+        <div>
+          <h1>RP Chat Builder</h1>
+          <p>OpenRouter • Character Card • Lore • Memory</p>
+        </div>
       </div>
-      <div class="brandActions">
-        <button class="secondary sidebarToggle" id="btnSidebarInside">Side View</button>
+      <div class="tabs" id="sidebarTabs">
+        <button class="tab active" data-tab="chats">Chats</button>
+        <button class="tab" data-tab="current">Current Chat</button>
+        <button class="tab" data-tab="settings">Settings</button>
       </div>
-    </div>
 
-    <div class="panel">
-      <h2>Connection</h2>
+      <div class="panel chatsPanel">
+        <h2>Chats</h2>
+        <div class="row" style="margin-top:6px">
+          <button id="btnNewChat">New Chat</button>
+        </div>
+        <div class="chatList" id="chatList"></div>
+      </div>
+
+      <div class="panel settingsPanel">
+        <h2>Connection</h2>
 
       <div class="chips" id="modeChips">
         <div class="chip active" data-mode="direct">Direct Mode</div>
@@ -490,13 +668,6 @@
       <div id="directFields">
         <label>OpenRouter API Key (saved locally)</label>
         <input id="apiKey" placeholder="sk-or-..." type="password" />
-
-        <label>App URL (optional header)</label>
-        <input id="siteUrl" placeholder="https://your-site.com" />
-
-        <label>App Name (optional header)</label>
-        <input id="appTitle" placeholder="My RP App" />
-        <div class="mini">OpenRouter supports optional attribution headers <span class="kbd">HTTP-Referer</span> and <span class="kbd">X-Title</span>. :contentReference[oaicite:1]{index=1}</div>
       </div>
 
       <div id="proxyFields" style="display:none">
@@ -521,32 +692,35 @@
       <div class="mini">Models list comes from <span class="kbd">GET https://openrouter.ai/api/v1/models</span>. :contentReference[oaicite:2]{index=2}</div>
     </div>
 
-    <div class="panel">
-      <h2>Character Card</h2>
-      <label>Name</label>
-      <input id="charName" placeholder="e.g. Nyx the Vampire Queen" />
-
-      <label>Persona (who they are)</label>
-      <textarea id="charPersona" placeholder="Core personality, voice, quirks..."></textarea>
-
-      <label>Scenario / Setting</label>
-      <textarea id="charScenario" placeholder="Where are we? What’s happening?"></textarea>
-
-      <label>Style Rules</label>
-      <textarea id="charStyle" placeholder="Formatting & pacing rules (ex: no OOC, write in 1st person, vivid sensory detail, short lines...)"></textarea>
-
-      <label>Example Dialogue (optional)</label>
-      <textarea id="charExamples" placeholder="User: ...&#10;Assistant: ..."></textarea>
-
-      <div class="row" style="margin-top:10px">
-        <button class="secondary" id="btnSaveChar">Save Card</button>
-        <button class="danger" id="btnResetChar">Reset</button>
+    <div class="panel currentPanel" data-collapsible="character">
+      <div class="panelHeader">
+        <h2>Characters</h2>
+        <div class="charActions">
+          <button class="secondary" id="btnAddChar" type="button">Add Character</button>
+          <button class="secondary panelToggle" type="button" data-target="character">Hide</button>
+        </div>
       </div>
-
-      <div class="mini">This compiles into a System Prompt so replies stay in-character.</div>
+      <div class="panelBody" data-body="character">
+        <label>Reply As</label>
+        <div class="row">
+          <select id="replyAsSelect"></select>
+          <button class="secondary" id="btnForceReply" type="button">Force Reply</button>
+        </div>
+        <div class="characterList" id="characterList"></div>
+        <div class="mini">Each character has its own persona. Auto uses name and recent speaker.</div>
+      </div>
     </div>
 
-    <div class="panel">
+    <div class="panel currentPanel">
+      <h2>Scene & Style</h2>
+      <label>Scene / Setting</label>
+      <textarea id="sceneSetting" placeholder="Where are we? What's happening?"></textarea>
+
+      <label>Style Rules (global)</label>
+      <textarea id="styleRules" placeholder="Formatting & pacing rules (ex: no OOC, write in 1st person...)"></textarea>
+    </div>
+
+    <div class="panel currentPanel">
       <h2>Lorebook (simple)</h2>
       <label>Lore Entries (JSON)</label>
       <textarea id="loreJson" style="min-height:120px" placeholder='[
@@ -556,7 +730,7 @@
       <div class="mini">We’ll auto-inject lore entries when keywords show up in the last messages.</div>
     </div>
 
-    <div class="panel">
+    <div class="panel settingsPanel">
       <h2>Generation</h2>
       <div class="row">
         <div>
@@ -582,7 +756,9 @@
       <label><input id="streamToggle" type="checkbox" checked style="width:auto; margin-right:8px"> Streaming</label>
       <div class="mini">Streaming uses SSE chunks (<span class="kbd">stream: true</span>). :contentReference[oaicite:3]{index=3}</div>
     </div>
+  </div>
   </aside>
+  <div class="sidebarBackdrop" id="sidebarBackdrop" aria-hidden="true"></div>
 
   <!-- MAIN -->
   <main class="main">
@@ -637,26 +813,16 @@ let aborter = null;
 let editingIndex = null;
 
 const LS_KEY = "rpchat_state_v1";
-let state = loadState() || {
-  mode: "direct",
-  apiKey: "",
-  siteUrl: "",
-  appTitle: "RP Chat Builder",
-  proxyBase: "",
-  model: "",
-  modelManual: "",
-  sidebarOpen: true,
-  char: {
-    name: "Nyx",
-    persona: "A mysterious immortal with a playful, dangerous charm. Always stays in-character. Vivid, cinematic, emotionally charged.",
-    scenario: "A stormy night in a neon-lit city. You meet in a quiet lounge. Something ancient is waking beneath the streets.",
-    style: "Stay in-character. No OOC unless asked. Mix dialogue + sensory description. Keep tension high. Do not summarize.",
-    examples: ""
-  },
-  loreJson: `[
-  {"keys":["neon","city"],"text":"The city is called Vantaeon—where neon never sleeps and secrets have teeth."},
-  {"keys":["nyx"],"text":"Nyx feeds on fear and devotion, but prefers consent and slow-burn seduction over violence."}
-]`,
+const DEFAULT_MODEL = "mistralai/devstral-2512:free";
+const DEFAULT_CHARACTER = {
+  name: "",
+  persona: ""
+};
+const DEFAULT_CHAT = {
+  characters: [],
+  scene: "",
+  style: "",
+  loreJson: "[]",
   gen: {
     temperature: 0.9,
     max_tokens: 600,
@@ -664,13 +830,149 @@ let state = loadState() || {
     presence_penalty: 0.2,
     stream: true
   },
-  messages: [
-    { role: "assistant", content: "…You’re late.\n\nNyx’s eyes glint in the lounge’s violet glow as thunder rumbles outside. “Tell me,” she purrs, “did you come here for answers… or trouble?”" }
-  ],
-  usage: null
+  messages: [],
+  usage: null,
+  replyAs: "auto",
+  lastReplyCharacterId: null,
+  characterCollapsed: {}
 };
 
+function cloneDefaultChat(){
+  return JSON.parse(JSON.stringify(DEFAULT_CHAT));
+}
+function cloneDefaultCharacter(){
+  return JSON.parse(JSON.stringify(DEFAULT_CHARACTER));
+}
+function makeChatId(){
+  return "chat_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
+}
+function makeCharId(){
+  return "char_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
+}
+function normalizeCharacter(character){
+  const base = cloneDefaultCharacter();
+  const c = { ...base, ...(character || {}) };
+  if(!c.id) c.id = makeCharId();
+  return c;
+}
+function createCharacter(overrides = {}){
+  const base = cloneDefaultCharacter();
+  return {
+    id: makeCharId(),
+    ...base,
+    ...overrides
+  };
+}
+function ensureCharacters(chat){
+  if(chat.char && !chat.characters){
+    chat.characters = [createCharacter(chat.char)];
+    delete chat.char;
+  }
+  if(!Array.isArray(chat.characters)) chat.characters = [];
+  if(chat.characters.length === 0){
+    chat.characters.push(createCharacter({ name: "Assistant" }));
+  }
+  chat.characters = chat.characters.map(c=>normalizeCharacter(c));
+  if(!chat.replyAs) chat.replyAs = "auto";
+  if(!chat.characterCollapsed || typeof chat.characterCollapsed !== "object") chat.characterCollapsed = {};
+  if(chat.replyAs !== "auto" && !chat.characters.find(c=>c.id === chat.replyAs)) chat.replyAs = "auto";
+  if(chat.lastReplyCharacterId && !chat.characters.find(c=>c.id === chat.lastReplyCharacterId)){
+    chat.lastReplyCharacterId = null;
+  }
+}
+function normalizeChat(chat){
+  const base = cloneDefaultChat();
+  if(!chat || typeof chat !== "object") return createChat();
+  if(typeof chat.scene !== "string") chat.scene = base.scene;
+  if(typeof chat.style !== "string") chat.style = base.style;
+  if(typeof chat.loreJson !== "string") chat.loreJson = base.loreJson;
+  chat.gen = { ...base.gen, ...(chat.gen || {}) };
+  if(!Array.isArray(chat.messages)) chat.messages = [];
+  if(chat.usage === undefined) chat.usage = base.usage;
+  if(chat.replyAs === undefined) chat.replyAs = base.replyAs;
+  if(chat.lastReplyCharacterId === undefined) chat.lastReplyCharacterId = base.lastReplyCharacterId;
+  if(!chat.characterCollapsed || typeof chat.characterCollapsed !== "object") chat.characterCollapsed = base.characterCollapsed;
+  ensureCharacters(chat);
+  if(!chat.scene){
+    const legacyScene = chat.characters.find(c=>c.scenario)?.scenario;
+    if(typeof legacyScene === "string") chat.scene = legacyScene;
+  }
+  if(!chat.style){
+    const legacyStyle = chat.characters.find(c=>c.style)?.style;
+    if(typeof legacyStyle === "string") chat.style = legacyStyle;
+  }
+  chat.characters.forEach(c=>{
+    delete c.keywords;
+    delete c.scenario;
+    delete c.style;
+    delete c.examples;
+  });
+  if(!chat.id) chat.id = makeChatId();
+  if(!chat.createdAt) chat.createdAt = Date.now();
+  if(!chat.updatedAt) chat.updatedAt = chat.createdAt;
+  updateChatTitle(chat);
+  return chat;
+}
+function createChat(overrides = {}){
+  const base = cloneDefaultChat();
+  const now = Date.now();
+  const chat = {
+    id: makeChatId(),
+    title: "New Chat",
+    createdAt: now,
+    updatedAt: now,
+    ...base,
+    ...overrides
+  };
+  ensureCharacters(chat);
+  updateChatTitle(chat);
+  return chat;
+}
+let state = loadState() || {
+  mode: "direct",
+  apiKey: "",
+  proxyBase: "",
+  model: DEFAULT_MODEL,
+  modelManual: "",
+  sidebarOpen: true,
+  sidebarTab: "chats",
+  charCardCollapsed: false,
+  chats: [createChat()],
+  currentChatId: null
+};
+
+if(!state.chats){
+  const legacyChars = state.char ? [createCharacter(state.char)] : [];
+  const legacyChat = createChat({
+    characters: legacyChars,
+    loreJson: typeof state.loreJson === "string" ? state.loreJson : DEFAULT_CHAT.loreJson,
+    gen: state.gen || DEFAULT_CHAT.gen,
+    messages: Array.isArray(state.messages) ? state.messages : DEFAULT_CHAT.messages,
+    usage: state.usage ?? null,
+    replyAs: "auto",
+    lastReplyCharacterId: null,
+    characterCollapsed: {}
+  });
+  state.chats = [legacyChat];
+  state.currentChatId = legacyChat.id;
+}
+if(!Array.isArray(state.chats) || state.chats.length === 0){
+  const newChat = createChat();
+  state.chats = [newChat];
+  state.currentChatId = newChat.id;
+}
+state.chats = state.chats.map(chat=>normalizeChat(chat));
+if(!state.currentChatId && state.chats[0]) state.currentChatId = state.chats[0].id;
+if(!state.chats.find(c=>c.id === state.currentChatId) && state.chats[0]){
+  state.currentChatId = state.chats[0].id;
+}
+
 if(state.sidebarOpen === undefined) state.sidebarOpen = true;
+if(state.sidebarTab === "build") state.sidebarTab = "current";
+if(!state.sidebarTab) state.sidebarTab = "chats";
+if(state.charCardCollapsed === undefined) state.charCardCollapsed = false;
+if(!state.modelManual && !state.model) state.model = DEFAULT_MODEL;
+let modelsAutoLoaded = false;
 
 renderAll();
 wireUI();
@@ -685,19 +987,36 @@ function wireUI(){
       updateModeFields();
       saveState();
       updateTopSub();
+      tryAutoLoadModels();
     });
   });
 
-  $("apiKey").addEventListener("input", e=>{ state.apiKey = e.target.value; saveState(); });
-  $("siteUrl").addEventListener("input", e=>{ state.siteUrl = e.target.value; saveState(); });
-  $("appTitle").addEventListener("input", e=>{ state.appTitle = e.target.value; saveState(); updateTopSub(); });
-  $("proxyBase").addEventListener("input", e=>{ state.proxyBase = e.target.value; saveState(); updateTopSub(); });
+  // Sidebar tabs
+  document.querySelectorAll("#sidebarTabs .tab").forEach(tab=>{
+    tab.addEventListener("click", ()=>{
+      state.sidebarTab = tab.dataset.tab || "chats";
+      applySidebarTab();
+      saveState();
+    });
+  });
+  const charToggle = document.querySelector(".panelToggle[data-target=\"character\"]");
+  if(charToggle){
+    charToggle.addEventListener("click", ()=>{
+      state.charCardCollapsed = !state.charCardCollapsed;
+      applyCharacterCardCollapse();
+      saveState();
+    });
+  }
+
+  $("apiKey").addEventListener("input", e=>{ state.apiKey = e.target.value; saveState(); tryAutoLoadModels(); });
+  $("proxyBase").addEventListener("input", e=>{ state.proxyBase = e.target.value; saveState(); updateTopSub(); tryAutoLoadModels(); });
 
   $("btnTest").addEventListener("click", testConnection);
   $("btnLoadModels").addEventListener("click", loadModels);
 
   $("modelSelect").addEventListener("change", e=>{
     state.model = e.target.value;
+    if(!state.model) state.model = DEFAULT_MODEL;
     $("modelManual").value = "";
     state.modelManual = "";
     saveState();
@@ -709,61 +1028,116 @@ function wireUI(){
       $("modelSelect").value = "";
       state.model = "";
     }
+    if(!state.modelManual && !state.model) state.model = DEFAULT_MODEL;
     saveState();
     updateTopSub();
   });
 
-  // Character
-  $("charName").addEventListener("input", e=>{ state.char.name = e.target.value; saveState(); updateTopTitle(); });
-  $("charPersona").addEventListener("input", e=>{ state.char.persona = e.target.value; saveState(); });
-  $("charScenario").addEventListener("input", e=>{ state.char.scenario = e.target.value; saveState(); });
-  $("charStyle").addEventListener("input", e=>{ state.char.style = e.target.value; saveState(); });
-  $("charExamples").addEventListener("input", e=>{ state.char.examples = e.target.value; saveState(); });
+  // Characters
+  const replySelect = $("replyAsSelect");
+  if(replySelect){
+    replySelect.addEventListener("change", e=>{
+      const chat = getCurrentChat();
+      if(!chat) return;
+      chat.replyAs = e.target.value || "auto";
+      touchChat(chat);
+      saveState();
+    });
+  }
+  const addCharBtn = $("btnAddChar");
+  if(addCharBtn) addCharBtn.addEventListener("click", addCharacter);
+  const forceReplyBtn = $("btnForceReply");
+  if(forceReplyBtn) forceReplyBtn.addEventListener("click", forceReply);
 
-  $("btnSaveChar").addEventListener("click", ()=>{
-    toast("Character card saved ✅");
-    updateTopTitle();
-  });
-  $("btnResetChar").addEventListener("click", ()=>{
-    if(!confirm("Reset character card to defaults?")) return;
-    state.char = {
-      name: "Nyx",
-      persona: "",
-      scenario: "",
-      style: "",
-      examples: ""
-    };
-    renderSidebar();
-    saveState();
-    updateTopTitle();
-  });
+  // Scene & Style
+  const sceneInput = $("sceneSetting");
+  if(sceneInput){
+    sceneInput.addEventListener("input", e=>{
+      const chat = getCurrentChat();
+      if(!chat) return;
+      chat.scene = e.target.value;
+      touchChat(chat);
+      saveState();
+    });
+  }
+  const styleInput = $("styleRules");
+  if(styleInput){
+    styleInput.addEventListener("input", e=>{
+      const chat = getCurrentChat();
+      if(!chat) return;
+      chat.style = e.target.value;
+      touchChat(chat);
+      saveState();
+    });
+  }
 
   // Lore
   $("loreJson").addEventListener("input", e=>{
-    state.loreJson = e.target.value;
+    const chat = getCurrentChat();
+    if(!chat) return;
+    chat.loreJson = e.target.value;
+    touchChat(chat);
     saveState();
   });
 
   // Generation controls
-  $("temp").addEventListener("input", e=>{ state.gen.temperature = parseFloat(e.target.value || "0.9"); saveState(); });
-  $("maxTokens").addEventListener("input", e=>{ state.gen.max_tokens = parseInt(e.target.value || "600", 10); saveState(); });
-  $("topP").addEventListener("input", e=>{ state.gen.top_p = parseFloat(e.target.value || "0.9"); saveState(); });
-  $("presence").addEventListener("input", e=>{ state.gen.presence_penalty = parseFloat(e.target.value || "0.2"); saveState(); });
-  $("streamToggle").addEventListener("change", e=>{ state.gen.stream = !!e.target.checked; saveState(); });
+  $("temp").addEventListener("input", e=>{
+    const chat = getCurrentChat();
+    if(!chat) return;
+    chat.gen.temperature = parseFloat(e.target.value || "0.9");
+    touchChat(chat);
+    saveState();
+  });
+  $("maxTokens").addEventListener("input", e=>{
+    const chat = getCurrentChat();
+    if(!chat) return;
+    chat.gen.max_tokens = parseInt(e.target.value || "600", 10);
+    touchChat(chat);
+    saveState();
+  });
+  $("topP").addEventListener("input", e=>{
+    const chat = getCurrentChat();
+    if(!chat) return;
+    chat.gen.top_p = parseFloat(e.target.value || "0.9");
+    touchChat(chat);
+    saveState();
+  });
+  $("presence").addEventListener("input", e=>{
+    const chat = getCurrentChat();
+    if(!chat) return;
+    chat.gen.presence_penalty = parseFloat(e.target.value || "0.2");
+    touchChat(chat);
+    saveState();
+  });
+  $("streamToggle").addEventListener("change", e=>{
+    const chat = getCurrentChat();
+    if(!chat) return;
+    chat.gen.stream = !!e.target.checked;
+    touchChat(chat);
+    saveState();
+  });
 
   // Chat actions
   $("btnClear").addEventListener("click", ()=>{
+    const chat = getCurrentChat();
+    if(!chat) return;
     if(!confirm("Clear chat?")) return;
-    state.messages = [];
+    chat.messages = [];
+    touchChat(chat);
     saveState();
-    renderChat();
+    renderChat({ preserveScroll: true });
+    renderChatList();
   });
 
   $("btnExport").addEventListener("click", exportChat);
   $("btnImport").addEventListener("click", importChat);
+  const newChatBtn = $("btnNewChat");
+  if(newChatBtn) newChatBtn.addEventListener("click", createNewChat);
   $("btnSidebar").addEventListener("click", toggleSidebar);
   const sidebarInsideBtn = $("btnSidebarInside");
   if(sidebarInsideBtn) sidebarInsideBtn.addEventListener("click", toggleSidebar);
+  const sidebarBackdrop = $("sidebarBackdrop");
+  if(sidebarBackdrop) sidebarBackdrop.addEventListener("click", ()=>{ if(state.sidebarOpen) toggleSidebar(); });
 
   $("btnSend").addEventListener("click", sendUserMessage);
   $("btnRegen").addEventListener("click", regenerateLast);
@@ -782,6 +1156,268 @@ function updateModeFields(){
   $("proxyFields").style.display = state.mode === "proxy" ? "block" : "none";
 }
 
+function getCurrentChat(){
+  let chat = state.chats.find(c=>c.id === state.currentChatId);
+  if(!chat && state.chats.length){
+    chat = state.chats[0];
+    state.currentChatId = chat.id;
+  }
+  return chat;
+}
+
+function touchChat(chat){
+  if(chat) chat.updatedAt = Date.now();
+}
+
+function getPrimaryCharacter(chat){
+  return chat?.characters?.[0] || null;
+}
+
+function getCharacterById(chat, id){
+  return (chat?.characters || []).find(c=>c.id === id) || null;
+}
+
+function updateChatTitle(chat){
+  if(!chat) return;
+  const primary = getPrimaryCharacter(chat);
+  const name = (primary?.name || "").trim();
+  chat.title = name || chat.title || "New Chat";
+}
+
+function pickAutoCharacter(chat, userText){
+  const text = String(userText || "").toLowerCase();
+  const lastAssistant = [...(chat?.messages || [])].reverse().find(m=>m.role === "assistant" && m.characterId);
+  const lastCharId = lastAssistant?.characterId || null;
+
+  let best = null;
+  let bestScore = -1;
+  for(const c of (chat?.characters || [])){
+    let score = 0;
+    const name = (c.name || "").toLowerCase();
+    if(name && text.includes(name)) score += 4;
+    if(c.id === lastCharId) score += 3;
+    if(c.id === chat.lastReplyCharacterId) score += 1;
+    if(score > bestScore){
+      bestScore = score;
+      best = c;
+    }
+  }
+  return best || getPrimaryCharacter(chat);
+}
+
+function resolveReplyCharacter(chat, userText, forcedId){
+  if(!chat) return null;
+  if(forcedId){
+    return getCharacterById(chat, forcedId) || getPrimaryCharacter(chat);
+  }
+  if(chat.replyAs && chat.replyAs !== "auto"){
+    return getCharacterById(chat, chat.replyAs) || getPrimaryCharacter(chat);
+  }
+  return pickAutoCharacter(chat, userText);
+}
+
+function renderReplySelect(){
+  const select = $("replyAsSelect");
+  if(!select) return;
+  const chat = getCurrentChat();
+  if(!chat) return;
+  select.innerHTML = "";
+  const autoOpt = document.createElement("option");
+  autoOpt.value = "auto";
+  autoOpt.textContent = "Auto (best match)";
+  select.appendChild(autoOpt);
+
+  (chat.characters || []).forEach((c, idx)=>{
+    const opt = document.createElement("option");
+    opt.value = c.id;
+    opt.textContent = c.name || `Character ${idx + 1}`;
+    select.appendChild(opt);
+  });
+
+  select.value = chat.replyAs || "auto";
+  if(select.value !== chat.replyAs){
+    select.value = "auto";
+    chat.replyAs = "auto";
+    saveState();
+  }
+}
+
+function renderCharacterList(){
+  const list = $("characterList");
+  if(!list) return;
+  const chat = getCurrentChat();
+  if(!chat) return;
+  list.innerHTML = "";
+
+  const makeLabel = (text)=>{
+    const label = document.createElement("label");
+    label.textContent = text;
+    return label;
+  };
+  const makeInput = (value, placeholder, onInput)=>{
+    const input = document.createElement("input");
+    input.value = value || "";
+    if(placeholder) input.placeholder = placeholder;
+    input.addEventListener("input", onInput);
+    return input;
+  };
+  const makeTextarea = (value, placeholder, onInput)=>{
+    const textarea = document.createElement("textarea");
+    textarea.value = value || "";
+    if(placeholder) textarea.placeholder = placeholder;
+    textarea.addEventListener("input", onInput);
+    return textarea;
+  };
+
+  (chat.characters || []).forEach((char, idx)=>{
+    const card = document.createElement("div");
+    card.className = "charCard";
+    card.dataset.charId = char.id;
+
+    const header = document.createElement("div");
+    header.className = "charHeader";
+
+    const nameInput = makeInput(char.name, `Character ${idx + 1}`, (e)=>{
+      char.name = e.target.value;
+      updateChatTitle(chat);
+      touchChat(chat);
+      saveState();
+      updateTopTitle();
+      renderReplySelect();
+      renderChatList();
+      renderChat({ preserveScroll: true });
+    });
+    nameInput.classList.add("charNameInput");
+
+    const actions = document.createElement("div");
+    actions.className = "charActions";
+
+    const toggleBtn = document.createElement("button");
+    toggleBtn.className = "secondary charToggle";
+    const isCollapsed = !!chat.characterCollapsed?.[char.id];
+    toggleBtn.textContent = isCollapsed ? "Show" : "Hide";
+    toggleBtn.addEventListener("click", ()=>{
+      chat.characterCollapsed[char.id] = !chat.characterCollapsed[char.id];
+      touchChat(chat);
+      saveState();
+      renderCharacterList();
+    });
+
+    const delBtn = document.createElement("button");
+    delBtn.className = "danger charDelete";
+    delBtn.textContent = "Delete";
+    delBtn.addEventListener("click", ()=>{
+      deleteCharacter(char.id);
+    });
+
+    actions.appendChild(toggleBtn);
+    actions.appendChild(delBtn);
+    header.appendChild(nameInput);
+    header.appendChild(actions);
+    card.appendChild(header);
+
+    const body = document.createElement("div");
+    body.className = "charBody";
+    body.style.display = isCollapsed ? "none" : "block";
+
+    body.appendChild(makeLabel("Persona (who they are)"));
+    body.appendChild(makeTextarea(char.persona, "Core personality, voice, quirks...", (e)=>{
+      char.persona = e.target.value;
+      touchChat(chat);
+      saveState();
+    }));
+
+    card.appendChild(body);
+    list.appendChild(card);
+  });
+}
+
+function addCharacter(){
+  const chat = getCurrentChat();
+  if(!chat) return;
+  const next = (chat.characters?.length || 0) + 1;
+  const char = createCharacter({ name: `Character ${next}` });
+  chat.characters.push(char);
+  touchChat(chat);
+  saveState();
+  renderReplySelect();
+  renderCharacterList();
+}
+
+function deleteCharacter(id){
+  const chat = getCurrentChat();
+  if(!chat) return;
+  if(chat.characters.length <= 1){
+    toast("Keep at least one character.");
+    return;
+  }
+  if(!confirm("Delete this character?")) return;
+  const fallback = chat.characters.find(c=>c.id !== id);
+  chat.characters = chat.characters.filter(c=>c.id !== id);
+  if(chat.replyAs === id) chat.replyAs = "auto";
+  if(chat.lastReplyCharacterId === id) chat.lastReplyCharacterId = null;
+  if(chat.characterCollapsed) delete chat.characterCollapsed[id];
+  if(fallback){
+    chat.messages.forEach(m=>{
+      if(m.characterId === id) m.characterId = fallback.id;
+    });
+  }
+  updateChatTitle(chat);
+  touchChat(chat);
+  saveState();
+  renderReplySelect();
+  renderCharacterList();
+  renderChat({ preserveScroll: true });
+  renderChatList();
+  updateTopTitle();
+}
+
+function getLastUserMessage(chat){
+  return [...(chat?.messages || [])].reverse().find(m=>m.role === "user" && (m.content || "").trim());
+}
+
+function forceReply(){
+  const chat = getCurrentChat();
+  if(!chat) return;
+  const lastUser = getLastUserMessage(chat);
+  if(!lastUser){
+    toast("No user message to reply to.");
+    return;
+  }
+  const select = $("replyAsSelect");
+  const forcedId = select && select.value && select.value !== "auto" ? select.value : null;
+  const target = resolveReplyCharacter(chat, lastUser.content, forcedId);
+  if(!target){
+    toast("Add a character first.");
+    return;
+  }
+  generateAssistantReply({ characterId: target.id, userText: lastUser.content });
+}
+
+function tryAutoLoadModels(){
+  if(modelsAutoLoaded) return;
+  if(state.mode === "direct" && !state.apiKey) return;
+  if(state.mode === "proxy" && !state.proxyBase) return;
+  modelsAutoLoaded = true;
+  loadModels();
+}
+
+function applySidebarTab(){
+  const tab = state.sidebarTab;
+  document.querySelectorAll(".chatsPanel").forEach(panel=>{
+    panel.style.display = tab === "chats" ? "block" : "none";
+  });
+  document.querySelectorAll(".currentPanel").forEach(panel=>{
+    panel.style.display = tab === "current" ? "block" : "none";
+  });
+  document.querySelectorAll(".settingsPanel").forEach(panel=>{
+    panel.style.display = tab === "settings" ? "block" : "none";
+  });
+  document.querySelectorAll("#sidebarTabs .tab").forEach(tab=>{
+    tab.classList.toggle("active", tab.dataset.tab === state.sidebarTab);
+  });
+}
+
 function applySidebarState(){
   if(state.sidebarOpen){
     appEl.classList.add("sidebar-open");
@@ -792,6 +1428,14 @@ function applySidebarState(){
   }
 }
 
+function applyCharacterCardCollapse(){
+  const body = document.querySelector("[data-body=\"character\"]");
+  const btn = document.querySelector(".panelToggle[data-target=\"character\"]");
+  if(!body || !btn) return;
+  body.style.display = state.charCardCollapsed ? "none" : "block";
+  btn.textContent = state.charCardCollapsed ? "Show" : "Hide";
+}
+
 function toggleSidebar(){
   state.sidebarOpen = !state.sidebarOpen;
   applySidebarState();
@@ -800,40 +1444,139 @@ function toggleSidebar(){
 
 function renderAll(){
   updateModeFields();
+  applySidebarTab();
   applySidebarState();
   renderSidebar();
   renderChat();
   updateTopTitle();
   updateTopSub();
+  tryAutoLoadModels();
 }
 
 function renderSidebar(){
+  const chat = getCurrentChat();
   $("apiKey").value = state.apiKey || "";
-  $("siteUrl").value = state.siteUrl || "";
-  $("appTitle").value = state.appTitle || "";
   $("proxyBase").value = state.proxyBase || "";
 
-  $("charName").value = state.char.name || "";
-  $("charPersona").value = state.char.persona || "";
-  $("charScenario").value = state.char.scenario || "";
-  $("charStyle").value = state.char.style || "";
-  $("charExamples").value = state.char.examples || "";
+  renderReplySelect();
+  renderCharacterList();
 
-  $("loreJson").value = state.loreJson || "[]";
+  $("sceneSetting").value = chat?.scene || "";
+  $("styleRules").value = chat?.style || "";
 
-  $("temp").value = state.gen.temperature ?? 0.9;
-  $("maxTokens").value = state.gen.max_tokens ?? 600;
-  $("topP").value = state.gen.top_p ?? 0.9;
-  $("presence").value = state.gen.presence_penalty ?? 0.2;
-  $("streamToggle").checked = !!state.gen.stream;
+  $("loreJson").value = chat?.loreJson || "[]";
+
+  $("temp").value = chat?.gen?.temperature ?? 0.9;
+  $("maxTokens").value = chat?.gen?.max_tokens ?? 600;
+  $("topP").value = chat?.gen?.top_p ?? 0.9;
+  $("presence").value = chat?.gen?.presence_penalty ?? 0.2;
+  $("streamToggle").checked = !!chat?.gen?.stream;
+
+  renderChatList();
+  applyCharacterCardCollapse();
 }
 
-function renderChat(){
+function getChatPreview(chat){
+  const last = [...(chat?.messages || [])].reverse().find(m=>m.content && m.content.trim());
+  if(!last) return "No messages yet";
+  const text = last.content.replace(/\s+/g, " ").trim();
+  return text.length > 60 ? text.slice(0, 57) + "..." : text;
+}
+
+function renderChatList(){
+  const list = $("chatList");
+  if(!list) return;
+  list.innerHTML = "";
+  const chats = [...state.chats].sort((a,b)=>(b.updatedAt || 0) - (a.updatedAt || 0));
+
+  for(const chat of chats){
+    updateChatTitle(chat);
+    const item = document.createElement("div");
+    item.className = "chatItem" + (chat.id === state.currentChatId ? " active" : "");
+    item.addEventListener("click", ()=>switchChat(chat.id));
+
+    const info = document.createElement("div");
+    info.className = "chatInfo";
+    const title = document.createElement("div");
+    title.className = "chatTitle";
+    title.textContent = chat.title || "New Chat";
+    const meta = document.createElement("div");
+    meta.className = "chatMeta";
+    meta.textContent = getChatPreview(chat);
+
+    const del = document.createElement("button");
+    del.className = "chatDelete";
+    del.textContent = "Delete";
+    del.addEventListener("click", (e)=>{
+      e.stopPropagation();
+      deleteChat(chat.id);
+    });
+
+    info.appendChild(title);
+    info.appendChild(meta);
+    item.appendChild(info);
+    item.appendChild(del);
+    list.appendChild(item);
+  }
+}
+
+function createNewChat(){
+  const chat = createChat();
+  state.chats.unshift(chat);
+  state.currentChatId = chat.id;
+  editingIndex = null;
+  saveState();
+  renderAll();
+}
+
+function switchChat(id){
+  if(id === state.currentChatId) return;
+  state.currentChatId = id;
+  editingIndex = null;
+  saveState();
+  renderAll();
+}
+
+function deleteChat(id){
+  const chat = state.chats.find(c=>c.id === id);
+  if(!chat) return;
+  if(!confirm("Delete this chat?")) return;
+  state.chats = state.chats.filter(c=>c.id !== id);
+  if(!state.chats.length){
+    const newChat = createChat();
+    state.chats = [newChat];
+    state.currentChatId = newChat.id;
+  }else if(state.currentChatId === id){
+    state.currentChatId = state.chats[0].id;
+  }
+  editingIndex = null;
+  saveState();
+  renderAll();
+}
+
+function renderChat(options = {}){
+  const preserveScroll = !!options.preserveScroll;
+  const prevTop = preserveScroll ? chatEl.scrollTop : 0;
+  const prevHeight = preserveScroll ? chatEl.scrollHeight : 0;
+
+  const chat = getCurrentChat();
   chatEl.innerHTML = "";
-  state.messages.forEach((m, idx)=>{
-    chatEl.appendChild(renderMessage(m, idx));
+  (chat?.messages || []).forEach((m, idx)=>{
+    chatEl.appendChild(renderMessage(chat, m, idx));
   });
-  scrollToBottom();
+
+  if(preserveScroll){
+    const delta = chatEl.scrollHeight - prevHeight;
+    chatEl.scrollTop = prevTop + delta;
+  }else{
+    scrollToBottom();
+  }
+}
+
+function autoSizeTextArea(el){
+  if(!el) return;
+  el.style.height = "auto";
+  el.style.height = `${el.scrollHeight}px`;
 }
 
 function escapeHTML(str){
@@ -964,13 +1707,15 @@ function renderMarkdown(md){
   return html;
 }
 
-function renderMessage(m, idx){
+function renderMessage(chat, m, idx){
   const wrap = document.createElement("div");
   wrap.className = "msg";
 
   const avatar = document.createElement("div");
   avatar.className = "avatar";
-  avatar.textContent = m.role === "user" ? "U" : (state.char.name?.slice(0,1)?.toUpperCase() || "A");
+  const character = m.role === "assistant" ? getCharacterById(chat, m.characterId) : null;
+  const charInitial = character?.name?.slice(0,1)?.toUpperCase() || "A";
+  avatar.textContent = m.role === "user" ? "U" : charInitial;
 
   const bubble = document.createElement("div");
   bubble.className = "bubble " + (m.role === "user" ? "user" : "assistant");
@@ -979,6 +1724,9 @@ function renderMessage(m, idx){
     const editBox = document.createElement("textarea");
     editBox.className = "editBox";
     editBox.value = m.content || "";
+    autoSizeTextArea(editBox);
+    requestAnimationFrame(()=>autoSizeTextArea(editBox));
+    editBox.addEventListener("input", ()=>autoSizeTextArea(editBox));
     editBox.addEventListener("keydown", (e)=>{
       if(e.key === "Escape"){
         e.preventDefault();
@@ -1008,7 +1756,7 @@ function renderMessage(m, idx){
   const meta = document.createElement("div");
   meta.className = "metaLine";
   const left = document.createElement("div");
-  left.textContent = m.role === "user" ? "You" : state.char.name || "Assistant";
+  left.textContent = m.role === "user" ? "You" : (character?.name || "Assistant");
   const right = document.createElement("div");
   right.className = "mono";
   right.textContent = m._streaming ? "streaming..." : "";
@@ -1080,7 +1828,8 @@ function renderMessage(m, idx){
 }
 
 function updateTopTitle(){
-  $("topTitle").textContent = state.char.name ? `${state.char.name} — RP Chat` : "RP Chat";
+  const chat = getCurrentChat();
+  $("topTitle").textContent = chat?.title || "RP Chat";
 }
 function updateTopSub(){
   const model = getModel();
@@ -1107,7 +1856,8 @@ function stopGeneration(){
     aborter = null;
     toast("Stopped ✋");
     // clear streaming flags
-    state.messages.forEach(m=>delete m._streaming);
+    const chat = getCurrentChat();
+    if(chat) chat.messages.forEach(m=>delete m._streaming);
     renderChat();
   }
 }
@@ -1130,7 +1880,9 @@ function finalizeAssistantMessage(msg){
 }
 
 function cycleVariant(idx, dir){
-  const msg = state.messages[idx];
+  const chat = getCurrentChat();
+  if(!chat) return;
+  const msg = chat.messages[idx];
   if(!msg || msg.role !== "assistant") return;
   ensureVariants(msg);
   if(msg._variants.length < 2) return;
@@ -1149,42 +1901,57 @@ async function sendUserMessage(){
 
   inputEl.value = "";
 
-  state.messages.push({ role:"user", content: text });
+  const chat = getCurrentChat();
+  if(!chat) return;
+  chat.messages.push({ role:"user", content: text });
+  touchChat(chat);
   saveState();
   renderChat();
+  renderChatList();
 
-  await generateAssistantReply();
+  const target = resolveReplyCharacter(chat, text);
+  await generateAssistantReply({ characterId: target?.id, userText: text });
 }
 
 async function regenerateLast(){
   // remove last assistant message if it exists
-  for(let i = state.messages.length - 1; i >= 0; i--){
-    if(state.messages[i].role === "assistant"){
+  const chat = getCurrentChat();
+  if(!chat) return;
+  for(let i = chat.messages.length - 1; i >= 0; i--){
+    if(chat.messages[i].role === "assistant"){
       await regenerateFromIndex(i);
       return;
     }
-    if(state.messages[i].role === "user") break;
+    if(chat.messages[i].role === "user") break;
   }
 }
 
 function startEditMessage(idx){
-  const msg = state.messages[idx];
+  const chat = getCurrentChat();
+  if(!chat) return;
+  const msg = chat.messages[idx];
   if(!msg || msg._streaming) return;
   editingIndex = idx;
-  renderChat();
+  renderChat({ preserveScroll: true });
 }
 
 function deleteMessage(idx){
-  if(idx < 0 || idx >= state.messages.length) return;
+  const chat = getCurrentChat();
+  if(!chat) return;
+  if(idx < 0 || idx >= chat.messages.length) return;
   if(!confirm("Delete this message?")) return;
-  state.messages.splice(idx, 1);
+  chat.messages.splice(idx, 1);
+  touchChat(chat);
   if(editingIndex === idx) editingIndex = null;
   saveState();
-  renderChat();
+  renderChat({ preserveScroll: true });
+  renderChatList();
 }
 
 function saveEditMessage(idx, next){
-  const msg = state.messages[idx];
+  const chat = getCurrentChat();
+  if(!chat) return;
+  const msg = chat.messages[idx];
   if(!msg) return;
   msg.content = next;
   if(msg.role === "assistant"){
@@ -1193,46 +1960,56 @@ function saveEditMessage(idx, next){
     msg._variants[vi] = next;
     msg._variantIndex = vi;
   }
+  touchChat(chat);
   editingIndex = null;
   saveState();
-  renderChat();
+  renderChat({ preserveScroll: true });
+  renderChatList();
 }
 
 function cancelEditMessage(){
   editingIndex = null;
-  renderChat();
+  renderChat({ preserveScroll: true });
 }
 
 async function regenerateFromIndex(idx){
-  if(idx < 0 || idx >= state.messages.length) return;
-  const target = state.messages[idx];
+  const chat = getCurrentChat();
+  if(!chat) return;
+  if(idx < 0 || idx >= chat.messages.length) return;
+  const target = chat.messages[idx];
   if(!target || target._streaming) return;
 
   const keepCount = target.role === "assistant" ? idx + 1 : idx + 1;
-  state.messages = state.messages.slice(0, keepCount);
+  chat.messages = chat.messages.slice(0, keepCount);
+  touchChat(chat);
 
   if(target.role === "assistant"){
+    const charId = target.characterId || resolveReplyCharacter(chat, "", null)?.id;
+    if(charId && !target.characterId) target.characterId = charId;
     ensureVariants(target);
     target._streaming = true;
     target.content = "";
     saveState();
     renderChat();
-    await generateAssistantReply({ assistantMsg: target });
+    renderChatList();
+    await generateAssistantReply({ assistantMsg: target, characterId: charId });
     return;
   }
 
-  const assistantMsg = { role:"assistant", content:"", _streaming:true };
-  state.messages.push(assistantMsg);
+  const replyChar = resolveReplyCharacter(chat, target.content);
+  const assistantMsg = { role:"assistant", content:"", _streaming:true, characterId: replyChar?.id };
+  chat.messages.push(assistantMsg);
   saveState();
   renderChat();
-  await generateAssistantReply({ assistantMsg });
+  await generateAssistantReply({ assistantMsg, characterId: replyChar?.id, userText: target.content });
 }
 
-function buildSystemPrompt(){
-  const c = state.char || {};
+function buildSystemPrompt(character, chat){
+  const c = character || {};
   const lines = [];
 
   lines.push(`You are roleplaying as "${c.name || "Assistant"}".`);
+  lines.push(`Only speak and act as "${c.name || "Assistant"}".`);
   lines.push(`Never mention being an AI or policies. Stay fully in character.`);
   lines.push(`No out-of-character commentary unless the user explicitly asks for OOC.`);
   lines.push("");
@@ -1242,19 +2019,14 @@ function buildSystemPrompt(){
     lines.push(c.persona.trim());
     lines.push("");
   }
-  if(c.scenario?.trim()){
-    lines.push("SCENARIO:");
-    lines.push(c.scenario.trim());
+  if(chat?.scene?.trim()){
+    lines.push("SCENE / SETTING:");
+    lines.push(chat.scene.trim());
     lines.push("");
   }
-  if(c.style?.trim()){
-    lines.push("STYLE RULES:");
-    lines.push(c.style.trim());
-    lines.push("");
-  }
-  if(c.examples?.trim()){
-    lines.push("EXAMPLE DIALOGUE:");
-    lines.push(c.examples.trim());
+  if(chat?.style?.trim()){
+    lines.push("STYLE RULES (GLOBAL):");
+    lines.push(chat.style.trim());
     lines.push("");
   }
 
@@ -1263,12 +2035,25 @@ function buildSystemPrompt(){
   lines.push("- Maintain continuity and emotional realism.");
   lines.push("- If the user asks to change tone/pace, obey.");
 
+  if(chat?.characters?.length > 1){
+    const others = chat.characters
+      .filter(x=>x.id !== c.id)
+      .map(x=>x.name)
+      .filter(Boolean);
+    if(others.length){
+      lines.push("");
+      lines.push(`Other characters in this chat: ${others.join(", ")}.`);
+      lines.push("Do not speak for them or write their dialogue.");
+    }
+  }
+
   return lines.join("\n");
 }
 
 function safeParseLore(){
   try{
-    const arr = JSON.parse(state.loreJson || "[]");
+    const chat = getCurrentChat();
+    const arr = JSON.parse(chat?.loreJson || "[]");
     return Array.isArray(arr) ? arr : [];
   }catch{
     return [];
@@ -1280,7 +2065,8 @@ function pickLoreSnippets(){
   if(!lore.length) return [];
 
   // Search last few messages for keywords
-  const recent = state.messages.slice(-8).map(m=>m.content || "").join("\n").toLowerCase();
+  const chat = getCurrentChat();
+  const recent = (chat?.messages || []).slice(-8).map(m=>m.content || "").join("\n").toLowerCase();
 
   const hits = [];
   for(const entry of lore){
@@ -1297,8 +2083,10 @@ function pickLoreSnippets(){
   return [...new Set(hits)].slice(0, 6);
 }
 
-function buildMessagesForAPI(){
-  const systemPrompt = buildSystemPrompt();
+function buildMessagesForAPI(characterId){
+  const chat = getCurrentChat();
+  const character = getCharacterById(chat, characterId) || getPrimaryCharacter(chat);
+  const systemPrompt = buildSystemPrompt(character, chat);
 
   const loreSnips = pickLoreSnippets();
   const loreBlock = loreSnips.length
@@ -1311,15 +2099,34 @@ function buildMessagesForAPI(){
   ];
 
   // Keep last N messages for context
-  const history = state.messages
+  const thread = (chat?.messages || [])
     .slice(-30)
     .filter(m => m.role !== "assistant" || (m.content && m.content.trim().length > 0))
-    .map(m => ({ role: m.role, content: m.content }));
+    .map(m=>{
+      if(m.role === "user") return `User: ${m.content || ""}`;
+      const c = getCharacterById(chat, m.characterId);
+      const name = c?.name || "Assistant";
+      return `${name}: ${m.content || ""}`;
+    })
+    .join("\n\n");
 
-  return [...sys, ...history];
+  const threadMsg = thread
+    ? [{ role: "user", content: `CHAT THREAD (most recent last):\n${thread}` }]
+    : [];
+
+  return [...sys, ...threadMsg];
 }
 
 async function generateAssistantReply(options = {}){
+  const chat = getCurrentChat();
+  if(!chat) return;
+  const userText = options.userText || "";
+  const forcedId = options.characterId || options.assistantMsg?.characterId || null;
+  const targetCharacter = resolveReplyCharacter(chat, userText, forcedId);
+  if(!targetCharacter){
+    toast("Add a character first.");
+    return;
+  }
   const model = getModel();
   if(!model){
     toast("Pick a model first (Load Models) ⚠️");
@@ -1337,10 +2144,12 @@ async function generateAssistantReply(options = {}){
   // Create placeholder assistant message for streaming UI
   const assistantMsg = options.assistantMsg || { role:"assistant", content:"", _streaming:true };
   if(!options.assistantMsg){
-    state.messages.push(assistantMsg);
+    chat.messages.push(assistantMsg);
   }else{
     assistantMsg._streaming = true;
   }
+  assistantMsg.characterId = targetCharacter.id;
+  touchChat(chat);
   saveState();
   renderChat();
 
@@ -1348,12 +2157,12 @@ async function generateAssistantReply(options = {}){
 
   const payload = {
     model,
-    messages: buildMessagesForAPI(),
-    temperature: state.gen.temperature,
-    max_tokens: state.gen.max_tokens,
-    top_p: state.gen.top_p,
-    presence_penalty: state.gen.presence_penalty,
-    stream: !!state.gen.stream
+    messages: buildMessagesForAPI(targetCharacter.id),
+    temperature: chat.gen.temperature,
+    max_tokens: chat.gen.max_tokens,
+    top_p: chat.gen.top_p,
+    presence_penalty: chat.gen.presence_penalty,
+    stream: !!chat.gen.stream
   };
 
   try{
@@ -1372,14 +2181,19 @@ async function generateAssistantReply(options = {}){
 
     assistantMsg._streaming = false;
     finalizeAssistantMessage(assistantMsg);
+    chat.lastReplyCharacterId = targetCharacter.id;
+    touchChat(chat);
     saveState();
     renderChat();
+    renderChatList();
     toast("Done ✅");
   }catch(err){
     assistantMsg._streaming = false;
     assistantMsg.content = assistantMsg.content || "";
+    touchChat(chat);
     saveState();
     renderChat();
+    renderChatList();
 
     toast("Error: " + (err?.message || String(err)));
   }finally{
@@ -1389,14 +2203,10 @@ async function generateAssistantReply(options = {}){
 }
 
 function buildHeaders(apiKey){
-  const headers = {
+  return {
     "Content-Type":"application/json",
     "Authorization": "Bearer " + apiKey,
   };
-  // Optional attribution headers
-  if(state.siteUrl?.trim()) headers["HTTP-Referer"] = state.siteUrl.trim();
-  if(state.appTitle?.trim()) headers["X-Title"] = state.appTitle.trim();
-  return headers;
 }
 
 async function callChat(payload){
@@ -1502,6 +2312,10 @@ async function loadModels(){
       opt.textContent = m.id;
       select.appendChild(opt);
     }
+    if(!state.modelManual && state.model){
+      select.value = state.model;
+      if(select.value !== state.model) select.value = "";
+    }
     toast(`Loaded ${models.length} models ✅`);
   }catch(err){
     toast("Models error: " + (err?.message || String(err)));
@@ -1544,16 +2358,24 @@ async function testConnection(){
 
 /* EXPORT / IMPORT */
 function exportChat(){
+  const chat = getCurrentChat();
+  if(!chat) return;
   const blob = new Blob([JSON.stringify({
-    char: state.char,
-    loreJson: state.loreJson,
-    gen: state.gen,
-    messages: state.messages
+    characters: chat.characters,
+    scene: chat.scene,
+    style: chat.style,
+    loreJson: chat.loreJson,
+    gen: chat.gen,
+    messages: chat.messages,
+    replyAs: chat.replyAs,
+    lastReplyCharacterId: chat.lastReplyCharacterId
   }, null, 2)], {type:"application/json"});
 
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `rpchat_${(state.char.name||"chat").toLowerCase().replace(/\s+/g,"_")}.json`;
+  const primary = getPrimaryCharacter(chat);
+  const base = (primary?.name || chat.title || "chat").toLowerCase().replace(/\s+/g,"_");
+  a.download = `rpchat_${base}.json`;
   a.click();
   URL.revokeObjectURL(a.href);
 }
@@ -1568,10 +2390,20 @@ function importChat(){
     const text = await file.text();
     const obj = JSON.parse(text);
 
-    if(obj.char) state.char = obj.char;
-    if(obj.loreJson) state.loreJson = obj.loreJson;
-    if(obj.gen) state.gen = obj.gen;
-    if(Array.isArray(obj.messages)) state.messages = obj.messages;
+    const chat = getCurrentChat();
+    if(!chat) return;
+    if(Array.isArray(obj.characters)) chat.characters = obj.characters;
+    if(obj.char && !obj.characters) chat.characters = [createCharacter(obj.char)];
+    if(typeof obj.scene === "string") chat.scene = obj.scene;
+    if(typeof obj.style === "string") chat.style = obj.style;
+    if(obj.loreJson) chat.loreJson = obj.loreJson;
+    if(obj.gen) chat.gen = obj.gen;
+    if(Array.isArray(obj.messages)) chat.messages = obj.messages;
+    if(obj.replyAs) chat.replyAs = obj.replyAs;
+    if(obj.lastReplyCharacterId) chat.lastReplyCharacterId = obj.lastReplyCharacterId;
+    normalizeChat(chat);
+    updateChatTitle(chat);
+    touchChat(chat);
 
     saveState();
     renderAll();
