@@ -72,11 +72,15 @@ nav a{
   outline-offset:0;
   border-radius:0;
   font-size:14px;
-  transition:border-color .15s ease, outline-color .15s ease;
+  transition:border-color .32s ease, outline-color .32s ease, box-shadow .4s ease, transform .32s ease;
 }
 nav a:hover{
   border-color:var(--hover);
   outline-color:rgba(81,141,213,.6);
+  box-shadow:
+    0 0 18px rgba(81,141,213,.22),
+    0 0 36px rgba(81,141,213,.18),
+    0 0 62px rgba(81,141,213,.12);
 }
 .nav-icon{
   width:24px;
@@ -128,11 +132,15 @@ nav a:hover{
   padding:18px;
   outline:1px solid rgba(81,141,213,.18);
   outline-offset:0;
-  transition:border-color .15s ease, outline-color .15s ease;
+  transition:border-color .32s ease, outline-color .32s ease, box-shadow .45s ease, transform .32s ease;
 }
 .feature-card:hover{
   border-color:var(--hover);
   outline-color:rgba(81,141,213,.6);
+  box-shadow:
+    0 0 20px rgba(81,141,213,.24),
+    0 0 42px rgba(81,141,213,.18),
+    0 0 74px rgba(81,141,213,.14);
 }
 .preview-shell{
   position:relative;
@@ -187,11 +195,15 @@ nav a:hover{
   outline:1px solid rgba(81,141,213,.18);
   outline-offset:0;
   background:var(--panel);
-  transition:border-color .15s ease, outline-color .15s ease;
+  transition:border-color .32s ease, outline-color .32s ease, box-shadow .45s ease, transform .32s ease;
 }
 .app:hover{
   border-color:var(--hover);
   outline-color:rgba(81,141,213,.6);
+  box-shadow:
+    0 0 20px rgba(81,141,213,.24),
+    0 0 42px rgba(81,141,213,.18),
+    0 0 74px rgba(81,141,213,.14);
 }
 .app h4{margin:0;font-size:15px}
 .app p{margin:0;color:var(--muted);font-size:13px}
@@ -202,6 +214,12 @@ footer{
   border-top:1px solid var(--line);
   color:var(--muted);
   font-size:13px;
+}
+.footer-links{
+  margin-top:6px;
+}
+.footer-links a:hover{
+  color:var(--hover);
 }
 </style>
 </head>
@@ -275,6 +293,9 @@ footer{
 <footer>
   <div class="wrap">
     &copy; <span id="year"></span> Techbrology
+    <div class="footer-links">
+      <a href="mailto:gippyioiscool@gmail.com">email</a>
+    </div>
   </div>
 </footer>
 

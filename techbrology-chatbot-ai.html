@@ -10,52 +10,102 @@
 :root{
   --bg:#0f0f0f;
   --panel:#252525;
-  --line:#2a2a2a;
+  --line:#1e1f20;
+  --hover:#518DD5;
   --text:#e3e3e3;
   --muted:#9a9a9a;
   --accent:#e3e3e3;
-  --radius:16px;
+  --radius:0;
   --shadow:0 18px 40px rgba(0,0,0,.45);
 }
 *{box-sizing:border-box}
 body{
   margin:0;
   font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+  background:
+    radial-gradient(circle at top, rgba(227,227,227,.03), transparent 40%),
+    linear-gradient(180deg, #0a0a0a 0%, var(--bg) 55%, #0a0a0a 100%);
   color:var(--text);
-  background:linear-gradient(180deg,#0a0a0a,#0f0f0f);
 }
 a{text-decoration:none;color:inherit}
-.wrap{
-  max-width:1200px;
-  margin:0 auto;
-  padding:24px;
+.wrap{max-width:1100px;margin:0 auto;padding:24px}
+header{
+  position:sticky;
+  top:0;
+  z-index:100;
+  background:rgba(15,15,15,.92);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
 }
-.topbar{
+.top{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  gap:16px;
-  margin-bottom:28px;
 }
+.brand{
+  display:flex;
+  align-items:center;
+  gap:17px;
+}
+.logo{
+  width:40px;
+  height:40px;
+  border-radius:6px;
+  display:block;
+  object-fit:cover;
+  border:1px solid var(--line);
+  transform:scale(1.5);
+  transform-origin:center center;
+}
+nav{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
+nav a,
 .back{
   display:inline-flex;
   align-items:center;
   gap:8px;
-  padding:10px 14px;
+  padding:7px 16px;
   border:1px solid var(--line);
-  border-radius:999px;
-  color:var(--muted);
+  outline:1px solid rgba(81,141,213,.18);
+  outline-offset:0;
+  border-radius:0;
+  font-size:14px;
+  transition:border-color .32s ease, outline-color .32s ease, box-shadow .4s ease, transform .32s ease;
 }
-.back:hover{border-color:var(--accent);color:var(--text)}
+nav a:hover,
+.back:hover{
+  border-color:var(--hover);
+  outline-color:rgba(81,141,213,.6);
+  box-shadow:
+    0 0 18px rgba(81,141,213,.22),
+    0 0 36px rgba(81,141,213,.18),
+    0 0 62px rgba(81,141,213,.12);
+}
+.nav-icon{
+  width:24px;
+  height:24px;
+  border-radius:0;
+  object-fit:cover;
+  display:block;
+  transform:scale(1.5);
+  transform-origin:center center;
+  margin-right:5px;
+}
+.page-actions{
+  margin:4px 0 0;
+}
 .card{
-  background:rgba(37,37,37,.85);
+  background:var(--panel);
   border:1px solid var(--line);
   border-radius:var(--radius);
   box-shadow:var(--shadow);
 }
 .hero{
   padding:26px;
-  margin-bottom:22px;
+  margin:22px 0;
 }
 .hero h1{
   margin:0 0 10px;
@@ -67,39 +117,58 @@ a{text-decoration:none;color:inherit}
   line-height:1.6;
   max-width:720px;
 }
-.frame-card{
+.frame-card,
+.video-card{
   padding:18px;
+}
+.video-card{
+  margin-top:22px;
+}
+.video-card h2{
+  margin:0 0 14px;
+  font-size:22px;
 }
 .generator-frame{
   width:100%;
   height:78vh;
   min-height:620px;
   border:1px solid var(--line);
-  border-radius:14px;
+  border-radius:0;
+  background:#000;
+}
+.video-frame{
+  width:100%;
+  aspect-ratio:16 / 9;
+  border:1px solid var(--line);
+  border-radius:0;
   background:#000;
 }
 .caption{
   margin-top:14px;
   color:var(--muted);
 }
-.video-card{
-  margin-top:22px;
-  padding:18px;
+footer{
+  margin-top:60px;
+  padding:8px 20px;
+  border-top:1px solid var(--line);
+  color:var(--muted);
+  font-size:13px;
 }
-.video-card h2{
-  margin:0 0 14px;
-  font-size:22px;
+.footer-links{
+  margin-top:6px;
 }
-.video-frame{
-  width:100%;
-  aspect-ratio:16 / 9;
-  border:1px solid var(--line);
-  border-radius:14px;
-  background:#000;
+.footer-links a:hover{
+  color:var(--hover);
 }
-@media (max-width: 700px){
+@media (max-width:900px){
+  .top{
+    flex-direction:column;
+    align-items:flex-start;
+    gap:18px;
+  }
+}
+@media (max-width:700px){
   .wrap{padding:18px}
-  .topbar{align-items:flex-start;flex-direction:column}
   .generator-frame{
     height:70vh;
     min-height:480px;
@@ -109,9 +178,39 @@ a{text-decoration:none;color:inherit}
 </head>
 <body>
 
+<header>
+  <div class="wrap top">
+    <div class="brand">
+      <img class="logo" src="pfp-midres.png" alt="Techbrology logo">
+      <div>
+        <strong>Techbrology</strong><br>
+        <small style="color:var(--muted)">Experimental AI &amp; Web Apps</small>
+      </div>
+    </div>
+    <nav>
+      <a href="index.html#apps">
+        <img class="nav-icon" src="apps.png" alt="Apps icon">
+        <span>Apps</span>
+      </a>
+      <a href="https://www.youtube.com/@techbrology" target="_blank">
+        <img class="nav-icon" src="animated-yt-logo.gif" alt="Youtube icon">
+        <span>Youtube</span>
+      </a>
+      <a href="https://scratch.mit.edu/users/Tate-1809/" target="_blank">
+        <img class="nav-icon" src="scratch-icon.gif" alt="Scratch icon">
+        <span>Scratch</span>
+      </a>
+      <a href="https://github.com/techbrology" target="_blank">
+        <img class="nav-icon" src="animated-github-logo.gif" alt="Github icon">
+        <span>Github</span>
+      </a>
+    </nav>
+  </div>
+</header>
+
 <main class="wrap">
-  <div class="topbar">
-    <a class="back" href="index.html">Back to home</a>
+  <div class="page-actions">
+    <a class="back" href="index.html">&larr; Back to home</a>
   </div>
 
   <section class="hero card">
@@ -140,6 +239,19 @@ a{text-decoration:none;color:inherit}
     ></iframe>
   </section>
 </main>
+
+<footer>
+  <div class="wrap">
+    &copy; <span id="year"></span> Techbrology
+    <div class="footer-links">
+      <a href="mailto:gippyioiscool@gmail.com">email</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+document.getElementById("year").textContent = new Date().getFullYear();
+</script>
 
 </body>
 </html>
