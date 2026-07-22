@@ -4,17 +4,17 @@
 <meta charset="utf-8">
 <title>Techbrology</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="favicon.png" type="image/png">
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4550811431931022" crossorigin="anonymous"></script>
-
 <style>
 :root{
-  --bg:#030712;
-  --panel:#0f1c34;
-  --line:#223454;
-  --hover:#35507d;
-  --text:#eef4ff;
-  --muted:#9db1cf;
-  --accent:#89b4ff;
+  --bg:#0f0f0f;
+  --panel:#252525;
+  --line:#1e1f20;
+  --hover:#518DD5;
+  --text:#e3e3e3;
+  --muted:#9a9a9a;
+  --accent:#e3e3e3;
   --radius:0;
   --shadow:0 18px 40px rgba(0,0,0,.45);
 }
@@ -23,8 +23,8 @@ body{
   margin:0;
   font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
   background:
-    radial-gradient(circle at top, rgba(71, 109, 176, 0.18), transparent 34%),
-    linear-gradient(180deg, #050a16 0%, var(--bg) 55%, #02050d 100%);
+    radial-gradient(circle at top, rgba(227,227,227,.03), transparent 40%),
+    linear-gradient(180deg, #0a0a0a 0%, var(--bg) 55%, #0a0a0a 100%);
   color:var(--text);
 }
 a{text-decoration:none;color:inherit}
@@ -33,7 +33,7 @@ header{
   position:sticky;
   top:0;
   z-index:100;
-  background:rgba(3,7,18,.9);
+  background:rgba(15,15,15,.92);
   backdrop-filter:blur(10px);
   border-bottom:1px solid var(--line);
 }
@@ -45,31 +45,48 @@ header{
 .brand{
   display:flex;
   align-items:center;
-  gap:12px;
+  gap:17px;
 }
 .logo{
-  width:40px;height:40px;
-  border-radius:0;
+  width:40px;
+  height:40px;
+  border-radius:6px;
   display:block;
   object-fit:cover;
   border:1px solid var(--line);
+  transform:scale(1.5);
+  transform-origin:center center;
+}
+nav{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
 }
 nav a{
   display:inline-flex;
   align-items:center;
   gap:8px;
-  padding:8px 12px;
+  padding:7px 16px;
   border:1px solid var(--line);
+  outline:1px solid rgba(81,141,213,.18);
+  outline-offset:0;
   border-radius:0;
-  font-size:13px;
+  font-size:14px;
+  transition:border-color .15s ease, outline-color .15s ease;
 }
-nav a:hover{border-color:var(--hover)}
+nav a:hover{
+  border-color:var(--hover);
+  outline-color:rgba(81,141,213,.6);
+}
 .nav-icon{
-  width:18px;
-  height:18px;
+  width:24px;
+  height:24px;
   border-radius:0;
   object-fit:cover;
   display:block;
+  transform:scale(1.5);
+  transform-origin:center center;
+  margin-right:5px;
 }
 
 .hero{
@@ -78,7 +95,9 @@ nav a:hover{border-color:var(--hover)}
   grid-template-columns:1.2fr .8fr;
   gap:20px;
 }
-@media(max-width:900px){.hero{grid-template-columns:1fr}}
+@media(max-width:900px){
+  .hero{grid-template-columns:1fr}
+}
 
 .card{
   background:var(--panel);
@@ -107,16 +126,20 @@ nav a:hover{border-color:var(--hover)}
 }
 .feature-card{
   padding:18px;
+  outline:1px solid rgba(81,141,213,.18);
+  outline-offset:0;
+  transition:border-color .15s ease, outline-color .15s ease;
 }
 .feature-card:hover{
   border-color:var(--hover);
+  outline-color:rgba(81,141,213,.6);
 }
 .preview-shell{
   position:relative;
   overflow:hidden;
   border:1px solid var(--line);
   border-radius:0;
-  background:#09111f;
+  background:#202020;
 }
 .preview-frame{
   width:100%;
@@ -147,8 +170,12 @@ nav a:hover{border-color:var(--hover)}
   grid-template-columns:repeat(3,1fr);
   gap:14px;
 }
-@media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:600px){.grid{grid-template-columns:1fr}}
+@media(max-width:900px){
+  .grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:600px){
+  .grid{grid-template-columns:1fr}
+}
 
 .app{
   display:flex;
@@ -157,15 +184,21 @@ nav a:hover{border-color:var(--hover)}
   padding:18px;
   border-radius:var(--radius);
   border:1px solid var(--line);
+  outline:1px solid rgba(81,141,213,.18);
+  outline-offset:0;
   background:var(--panel);
+  transition:border-color .15s ease, outline-color .15s ease;
 }
-.app:hover{border-color:var(--hover)}
+.app:hover{
+  border-color:var(--hover);
+  outline-color:rgba(81,141,213,.6);
+}
 .app h4{margin:0;font-size:15px}
 .app p{margin:0;color:var(--muted);font-size:13px}
 
 footer{
   margin-top:60px;
-  padding:20px;
+  padding:8px 20px;
   border-top:1px solid var(--line);
   color:var(--muted);
   font-size:13px;
@@ -178,23 +211,29 @@ footer{
 <header>
   <div class="wrap top">
     <div class="brand">
-      <img class="logo" src="youtube-icon.png" alt="Techbrology logo">
+      <img class="logo" src="pfp-midres.png" alt="Techbrology logo">
       <div>
         <strong>Techbrology</strong><br>
-        <small style="color:var(--muted)">Experimental AI & Web Apps</small>
+        <small style="color:var(--muted)">Experimental AI &amp; Web Apps</small>
       </div>
     </div>
     <nav>
-      <a href="#apps">Apps</a>
+      <a href="#apps">
+        <img class="nav-icon" src="apps.png" alt="Apps icon">
+        <span>Apps</span>
+      </a>
       <a href="https://www.youtube.com/@techbrology" target="_blank">
-        <img class="nav-icon" src="youtube-icon.png" alt="Youtube icon">
+        <img class="nav-icon" src="animated-yt-logo.gif" alt="Youtube icon">
         <span>Youtube</span>
       </a>
       <a href="https://scratch.mit.edu/users/Tate-1809/" target="_blank">
-        <img class="nav-icon" src="125830643_60x60%20(2).gif" alt="Scratch icon">
-        <span>scratch</span>
+        <img class="nav-icon" src="scratch-icon.gif" alt="Scratch icon">
+        <span>Scratch</span>
       </a>
-      <a href="https://github.com/techbrology" target="_blank">GitHub</a>
+      <a href="https://github.com/techbrology" target="_blank">
+        <img class="nav-icon" src="animated-github-logo.gif" alt="Github icon">
+        <span>Github</span>
+      </a>
     </nav>
   </div>
 </header>
@@ -206,19 +245,17 @@ footer{
     <h2>Building experimental<br>web software.</h2>
     <p>
       Techbrology.com is a platform where Michael, also known as MJ, shares the projects he has made.
-      He owns the channel Techbrology on Youtube. Here:
-      <a href="https://www.youtube.com/@techbrology" target="_blank">https://www.youtube.com/@techbrology</a>
-      Most of his projects are making AI in the coding language Scratch.
+      He owns the channel Techbrology on Youtube and makes most of his AI projects in Scratch.
     </p>
   </div>
 
   <div class="card">
     <h3>Principles</h3>
     <p style="color:var(--muted)">
-      • Runs in the browser<br>
-      • No backend required<br>
-      • Pure HTML / JS<br>
-      • Fast to iterate
+      &bull; A home for all my projects<br>
+      &bull; Updates on my youtube channel<br>
+      &bull; A way to try my projects for yourself<br>
+      &bull; Quick links to all my accounts
     </p>
   </div>
 </section>
@@ -237,48 +274,38 @@ footer{
 
 <footer>
   <div class="wrap">
-    © <span id="year"></span> Techbrology
+    &copy; <span id="year"></span> Techbrology
   </div>
 </footer>
 
 <script>
-/* ==================================================
-   ✏️ EDIT ONLY THIS SECTION TO ADD APPS
-   ================================================== */
-const APPS_BASE = "https://techbrology.github.io/apps";
-
 const FEATURED_PROJECTS = [
   {
     name: "Texa AI image",
     page: "texa-ai-image.html",
     preview: "texa-preview.png",
-    description: "this is the image generator"
+    description: "This is the image generator"
   },
   {
-    name: "techbrology AI chatbot",
+    name: "Techbrology AI Chatbot",
     page: "techbrology-chatbot-ai.html",
     preview: "chatbot-preview.png",
-    description: "AI chatbot from \"i made an AI and i can't even code\""
+    description: "AI chatbot from \"I made an AI and I can't even code\""
   },
 ];
 
 const APPS = [
   {
-    name: "discord",
+    name: "Discord",
     folder: "discordai",
     description: "Chat UI experiment with AI backends"
   },
   {
     name: "Roleplay AI Beta",
     folder: "roleplay",
-    description: "my next project for roleplay ai"
+    description: "My next project for roleplay ai"
   },
 ];
-
-
-/* ==================================================
-   🚫 DO NOT EDIT BELOW THIS LINE
-   ================================================== */
 
 const featuredGrid = document.getElementById("featuredGrid");
 const grid = document.getElementById("appsGrid");
