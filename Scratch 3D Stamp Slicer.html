@@ -1,0 +1,1556 @@
+<!DOCTYPE html>
+<!-- saved from url=(0071)file:///C:/Users/tarno/OneDrive/Documentos/New%20project%206/index.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Scratch 3D Stamp Slicer</title>
+  <link rel="icon" href="data:,">
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #162023;
+      --muted: #637073;
+      --line: #d5dedf;
+      --panel: #ffffff;
+      --soft: #eef4f4;
+      --stage: #f7faf8;
+      --accent: #0f8c83;
+      --accent-strong: #0a675f;
+      --warn: #b76b16;
+      --shadow: 0 18px 46px rgba(20, 43, 45, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--stage);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button {
+      min-height: 42px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      padding: 0 14px;
+      background: var(--accent);
+      color: #fff;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    button.secondary {
+      background: #fff;
+      color: var(--accent-strong);
+      border-color: var(--line);
+    }
+
+    button:disabled {
+      cursor: wait;
+      opacity: 0.6;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.86);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 3;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+
+    .status {
+      color: var(--muted);
+      font-size: 14px;
+      text-align: right;
+      min-width: 180px;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 360px;
+      gap: 18px;
+      padding: 18px;
+      max-width: 1480px;
+      margin: 0 auto;
+    }
+
+    .stage {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
+      gap: 18px;
+      min-width: 0;
+    }
+
+    .viewport,
+    .stack,
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .viewport {
+      min-height: 560px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #previewCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .hud {
+      position: absolute;
+      left: 14px;
+      bottom: 14px;
+      right: 14px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      pointer-events: none;
+    }
+
+    .chip {
+      background: rgba(255, 255, 255, 0.84);
+      border: 1px solid rgba(213, 222, 223, 0.9);
+      border-radius: 999px;
+      padding: 6px 10px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .stack {
+      min-height: 560px;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      overflow: hidden;
+    }
+
+    .stack header,
+    .panel header {
+      position: static;
+      padding: 14px;
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+      backdrop-filter: none;
+    }
+
+    .stack h2,
+    .panel h2 {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.2;
+    }
+
+    #stackCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      background:
+        linear-gradient(45deg, #dfe8e9 25%, transparent 25%),
+        linear-gradient(-45deg, #dfe8e9 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #dfe8e9 75%),
+        linear-gradient(-45deg, transparent 75%, #dfe8e9 75%);
+      background-size: 24px 24px;
+      background-position: 0 0, 0 12px, 12px -12px, -12px 0;
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+      gap: 8px;
+      padding: 12px;
+      max-height: 180px;
+      overflow: auto;
+      border-top: 1px solid var(--line);
+      background: #fbfdfd;
+    }
+
+    .thumb {
+      display: grid;
+      gap: 4px;
+      justify-items: center;
+      min-width: 0;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .thumb img {
+      width: 58px;
+      height: 58px;
+      object-fit: contain;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background:
+        linear-gradient(45deg, #e1e8e9 25%, transparent 25%),
+        linear-gradient(-45deg, #e1e8e9 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #e1e8e9 75%),
+        linear-gradient(-45deg, transparent 75%, #e1e8e9 75%);
+      background-size: 14px 14px;
+      background-position: 0 0, 0 7px, 7px -7px, -7px 0;
+    }
+
+    .panel {
+      align-self: start;
+      overflow: hidden;
+    }
+
+    .panel-body {
+      padding: 14px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .drop {
+      display: grid;
+      gap: 8px;
+      padding: 14px;
+      border: 1px dashed #9db1b1;
+      border-radius: 8px;
+      background: var(--soft);
+      cursor: pointer;
+    }
+
+    .drop input {
+      display: none;
+    }
+
+    .drop strong {
+      font-size: 14px;
+    }
+
+    .drop span {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.3;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    select,
+    input[type="number"],
+    input[type="color"] {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+      padding: 0 10px;
+    }
+
+    input[type="color"] {
+      padding: 4px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    .inline {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 72px;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 40px;
+      padding: 0 2px;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .toggle input {
+      inline-size: 18px;
+      block-size: 18px;
+      accent-color: var(--accent);
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    progress {
+      width: 100%;
+      height: 12px;
+      border: 0;
+      border-radius: 999px;
+      overflow: hidden;
+      background: var(--soft);
+    }
+
+    progress::-webkit-progress-bar {
+      background: var(--soft);
+    }
+
+    progress::-webkit-progress-value {
+      background: var(--accent);
+    }
+
+    .note {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    @media (max-width: 1120px) {
+      main,
+      .stage {
+        grid-template-columns: 1fr;
+      }
+
+      .panel {
+        order: -1;
+      }
+    }
+
+    @media (max-width: 620px) {
+      header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .status {
+        text-align: left;
+      }
+
+      main {
+        padding: 10px;
+      }
+
+      .viewport,
+      .stack {
+        min-height: 430px;
+      }
+
+      .grid,
+      .actions {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Scratch 3D Stamp Slicer</h1>
+    <div class="status" id="status">Sample model ready</div>
+  </header>
+
+  <main>
+    <section class="stage" aria-label="Preview area">
+      <div class="viewport">
+        <canvas id="previewCanvas" data-engine="three.js r160" width="620" height="961" style="touch-action: none;"></canvas>
+        <div class="hud">
+          <span class="chip" id="modelChip">sample-model</span>
+          <span class="chip" id="sliceChip">48 layers</span>
+        </div>
+      </div>
+
+      <section class="stack" aria-label="Stamp preview">
+        <header>
+          <h2>Stamp Stack</h2>
+        </header>
+        <canvas id="stackCanvas" width="372" height="899"></canvas>
+        <div class="gallery" id="gallery"></div>
+      </section>
+    </section>
+
+    <aside class="panel" aria-label="Slicer controls">
+      <header>
+        <h2>Exporter</h2>
+      </header>
+      <div class="panel-body">
+        <label class="drop" for="modelInput">
+          <input id="modelInput" type="file" multiple="" accept=".glb,.gltf,.obj,.stl,.bin,.png,.jpg,.jpeg,.webp,.mtl">
+          <strong>Load model</strong>
+          <span>GLB, GLTF, OBJ, or STL. Select companion files with GLTF when it has textures or .bin files.</span>
+        </label>
+
+        <div class="grid">
+          <div class="field">
+            <label for="mode">Output mode</label>
+            <select id="mode">
+              <option value="solid">Filled contours</option>
+              <option value="slab">Rendered slabs</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="axis">Slice axis</label>
+            <select id="axis">
+              <option value="y">Bottom to top</option>
+              <option value="x">Side to side - 0 deg</option>
+              <option value="z">Side to side - 90 deg</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="layerOrder">Direction</label>
+          <select id="layerOrder"><option value="low-to-high">Bottom to top</option><option value="high-to-low">Top to bottom</option></select>
+        </div>
+
+        <div class="grid">
+          <div class="field">
+            <label for="layers">Layers</label>
+            <input id="layers" type="number" min="2" max="160" step="1" value="48">
+          </div>
+          <div class="field">
+            <label for="imageSize">PNG size</label>
+            <select id="imageSize">
+              <option value="128">128 px</option>
+              <option value="256" selected="">256 px</option>
+              <option value="512">512 px</option>
+              <option value="1024">1024 px</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="field">
+            <label for="stampX">Scratch X step</label>
+            <input id="stampX" type="number" min="-20" max="20" step="0.25" value="0">
+          </div>
+          <div class="field">
+            <label for="stampY">Scratch Y step</label>
+            <input id="stampY" type="number" min="-20" max="20" step="0.25" value="1">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="padding">Padding</label>
+          <div class="inline">
+            <input id="padding" type="range" min="0" max="40" step="1" value="12">
+            <input id="paddingNumber" type="number" min="0" max="40" step="1" value="12">
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="field">
+            <label for="fillColor">Fill color</label>
+            <input id="fillColor" type="color" value="#29a89c">
+          </div>
+          <label class="toggle" for="outline">
+            <input id="outline" type="checkbox" checked="">
+            Edge ink
+          </label>
+        </div>
+
+        <div class="field">
+          <label for="layerShape">Layer shape</label>
+          <select id="layerShape">
+            <option value="isometric">Isometric tile</option>
+            <option value="skew">Skew only</option>
+            <option value="flat" selected="">Flat original</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="edgeExpand">Edge expand</label>
+          <div class="inline">
+            <input id="edgeExpand" type="range" min="0" max="8" step="1" value="0">
+            <input id="edgeExpandNumber" type="number" min="0" max="8" step="1" value="0">
+          </div>
+        </div>
+
+        <div class="field" id="slabViewField" style="display: none;">
+          <label for="slabView">Slab view</label>
+          <select id="slabView">
+            <option value="axis">Through slice axis</option>
+            <option value="front">Front</option>
+            <option value="right">Right</option>
+            <option value="iso">Isometric</option>
+          </select>
+        </div>
+
+        <div class="actions">
+          <button id="generateBtn" type="button">Generate</button>
+          <button id="downloadBtn" class="secondary" type="button">Download ZIP</button>
+        </div>
+
+        <progress id="progress" value="0" max="1"></progress>
+        <div class="note" id="summary">Bottom-to-top PNGs export with transparent backgrounds.</div>
+      </div>
+    </aside>
+  </main>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+        "jszip": "https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm"
+      }
+    }
+  </script>
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+    import { STLLoader } from 'three/addons/loaders/STLLoader.js';
+    import JSZip from 'jszip';
+
+    const canvas = document.querySelector('#previewCanvas');
+    const stackCanvas = document.querySelector('#stackCanvas');
+    const gallery = document.querySelector('#gallery');
+    const statusEl = document.querySelector('#status');
+    const modelChip = document.querySelector('#modelChip');
+    const sliceChip = document.querySelector('#sliceChip');
+    const progressEl = document.querySelector('#progress');
+    const summaryEl = document.querySelector('#summary');
+    const modelInput = document.querySelector('#modelInput');
+    const generateBtn = document.querySelector('#generateBtn');
+    const downloadBtn = document.querySelector('#downloadBtn');
+    const modeEl = document.querySelector('#mode');
+    const axisEl = document.querySelector('#axis');
+    const layerOrderEl = document.querySelector('#layerOrder');
+    const layersEl = document.querySelector('#layers');
+    const imageSizeEl = document.querySelector('#imageSize');
+    const stampXEl = document.querySelector('#stampX');
+    const stampYEl = document.querySelector('#stampY');
+    const paddingEl = document.querySelector('#padding');
+    const paddingNumberEl = document.querySelector('#paddingNumber');
+    const fillColorEl = document.querySelector('#fillColor');
+    const outlineEl = document.querySelector('#outline');
+    const layerShapeEl = document.querySelector('#layerShape');
+    const edgeExpandEl = document.querySelector('#edgeExpand');
+    const edgeExpandNumberEl = document.querySelector('#edgeExpandNumber');
+    const slabViewEl = document.querySelector('#slabView');
+    const slabViewField = document.querySelector('#slabViewField');
+
+    const state = {
+      model: null,
+      modelName: 'sample-model',
+      layers: [],
+      layerUrls: [],
+      objectUrls: [],
+      dirty: true,
+      lastSettingsKey: '',
+      busy: false
+    };
+
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: true,
+      alpha: true
+    });
+    renderer.setClearColor(0xf7faf8, 1);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xf7faf8);
+
+    const camera = new THREE.PerspectiveCamera(42, 1, 0.01, 1000);
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+
+    const hemi = new THREE.HemisphereLight(0xffffff, 0x8fa6a6, 1.7);
+    scene.add(hemi);
+
+    const keyLight = new THREE.DirectionalLight(0xffffff, 2.8);
+    keyLight.position.set(3.5, 5.2, 4.1);
+    scene.add(keyLight);
+
+    const fillLight = new THREE.DirectionalLight(0xd9fff8, 1.1);
+    fillLight.position.set(-4.5, 2.5, -2.5);
+    scene.add(fillLight);
+
+    const grid = new THREE.GridHelper(5.5, 11, 0xc6d4d5, 0xe2ebeb);
+    grid.position.y = -2.02;
+    scene.add(grid);
+
+    const axes = {
+      x: {
+        vector: new THREE.Vector3(1, 0, 0),
+        up: new THREE.Vector3(0, 1, 0)
+      },
+      y: {
+        vector: new THREE.Vector3(0, 1, 0),
+        up: new THREE.Vector3(0, 0, 1)
+      },
+      z: {
+        vector: new THREE.Vector3(0, 0, 1),
+        up: new THREE.Vector3(0, 1, 0)
+      }
+    };
+
+    const cornerOffsets = [
+      [0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 1, 0],
+      [0, 0, 1], [1, 0, 1], [0, 1, 1], [1, 1, 1]
+    ];
+
+    setup();
+
+    function setup() {
+      setModel(normalizeModel(buildSampleModel()), 'sample-model');
+      resize();
+      animate();
+      updateSlabControls();
+      updateLayerOrderOptions();
+      updateStackPreview();
+
+      window.addEventListener('resize', resize);
+      modelInput.addEventListener('change', () => loadSelectedFiles(modelInput.files));
+      generateBtn.addEventListener('click', () => generateLayers());
+      downloadBtn.addEventListener('click', () => downloadZip());
+
+      for (const control of [modeEl, axisEl, layerOrderEl, layersEl, imageSizeEl, paddingEl, paddingNumberEl, fillColorEl, outlineEl, layerShapeEl, edgeExpandEl, edgeExpandNumberEl, slabViewEl]) {
+        control.addEventListener('input', () => {
+          if (control === paddingEl) paddingNumberEl.value = paddingEl.value;
+          if (control === paddingNumberEl) paddingEl.value = paddingNumberEl.value;
+          if (control === edgeExpandEl) edgeExpandNumberEl.value = edgeExpandEl.value;
+          if (control === edgeExpandNumberEl) edgeExpandEl.value = edgeExpandNumberEl.value;
+          if (control === axisEl) updateLayerOrderOptions();
+          markDirty();
+          updateSlabControls();
+        });
+      }
+
+      for (const control of [stampXEl, stampYEl]) {
+        control.addEventListener('input', markDirty);
+      }
+    }
+
+    function buildSampleModel() {
+      const group = new THREE.Group();
+      const teal = new THREE.MeshStandardMaterial({ color: 0x29a89c, roughness: 0.55, metalness: 0.03 });
+      const gold = new THREE.MeshStandardMaterial({ color: 0xe2a33b, roughness: 0.58, metalness: 0.04 });
+      const dark = new THREE.MeshStandardMaterial({ color: 0x29535a, roughness: 0.48, metalness: 0.02 });
+
+      const base = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.55, 1.45), teal);
+      base.position.y = -0.72;
+      group.add(base);
+
+      const middle = new THREE.Mesh(new THREE.BoxGeometry(1.42, 0.62, 1.05), gold);
+      middle.position.y = -0.1;
+      middle.rotation.y = Math.PI / 12;
+      group.add(middle);
+
+      const top = new THREE.Mesh(new THREE.ConeGeometry(0.82, 1.26, 6), dark);
+      top.position.y = 0.84;
+      top.rotation.y = Math.PI / 6;
+      group.add(top);
+
+      const cap = new THREE.Mesh(new THREE.SphereGeometry(0.32, 24, 14), teal);
+      cap.position.set(-0.45, 1.48, 0.24);
+      group.add(cap);
+
+      return group;
+    }
+
+    async function loadSelectedFiles(fileList) {
+      const files = [...fileList];
+      const modelFile = files.find((file) => /\.(glb|gltf|obj|stl)$/i.test(file.name));
+      if (!modelFile) {
+        setStatus('Choose a GLB, GLTF, OBJ, or STL file');
+        return;
+      }
+
+      setBusy(true, 'Loading model...');
+      clearObjectUrls();
+
+      try {
+        const urlMap = new Map();
+        for (const file of files) {
+          const url = URL.createObjectURL(file);
+          state.objectUrls.push(url);
+          urlMap.set(file.name, url);
+          urlMap.set(file.name.toLowerCase(), url);
+        }
+
+        const ext = modelFile.name.split('.').pop().toLowerCase();
+        const object = await parseModelFile(modelFile, ext, urlMap);
+        setModel(normalizeModel(object), safeBaseName(modelFile.name));
+        markDirty();
+        clearLayers();
+        updateStackPreview();
+        setStatus(`${modelFile.name} loaded`);
+      } catch (error) {
+        console.error(error);
+        setStatus('Model load failed');
+        summaryEl.textContent = error.message || 'The selected model could not be loaded.';
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    async function parseModelFile(file, ext, urlMap) {
+      if (ext === 'glb' || ext === 'gltf') {
+        const manager = new THREE.LoadingManager();
+        manager.setURLModifier((url) => {
+          const clean = decodeURIComponent(url.split('/').pop());
+          return urlMap.get(clean) || urlMap.get(clean.toLowerCase()) || url;
+        });
+        const loader = new GLTFLoader(manager);
+        const url = urlMap.get(file.name);
+        const gltf = await loader.loadAsync(url);
+        return gltf.scene;
+      }
+
+      if (ext === 'obj') {
+        const text = await file.text();
+        const object = new OBJLoader().parse(text);
+        applyFallbackMaterial(object);
+        return object;
+      }
+
+      if (ext === 'stl') {
+        const buffer = await file.arrayBuffer();
+        const geometry = new STLLoader().parse(buffer);
+        geometry.computeVertexNormals();
+        return new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color: 0x29a89c, roughness: 0.56 }));
+      }
+
+      throw new Error('Unsupported model format.');
+    }
+
+    function applyFallbackMaterial(object) {
+      object.traverse((child) => {
+        if (child.isMesh && !child.material) {
+          child.material = new THREE.MeshStandardMaterial({ color: 0x29a89c, roughness: 0.56 });
+        }
+      });
+    }
+
+    function normalizeModel(object) {
+      const wrapper = new THREE.Group();
+      wrapper.add(object);
+      wrapper.updateMatrixWorld(true);
+
+      const box = new THREE.Box3().setFromObject(wrapper);
+      const size = box.getSize(new THREE.Vector3());
+      const center = box.getCenter(new THREE.Vector3());
+      const maxDim = Math.max(size.x, size.y, size.z) || 1;
+
+      object.position.sub(center);
+      wrapper.scale.setScalar(4 / maxDim);
+      wrapper.updateMatrixWorld(true);
+      return wrapper;
+    }
+
+    function setModel(model, name) {
+      if (state.model) {
+        scene.remove(state.model);
+      }
+
+      state.model = model;
+      state.modelName = name;
+      scene.add(model);
+      modelChip.textContent = name;
+      framePreviewCamera();
+    }
+
+    function framePreviewCamera() {
+      if (!state.model) return;
+      const box = new THREE.Box3().setFromObject(state.model);
+      const sphere = box.getBoundingSphere(new THREE.Sphere());
+      const radius = Math.max(sphere.radius, 0.1);
+      camera.position.copy(sphere.center).add(new THREE.Vector3(4.2, 3.2, 5.2).normalize().multiplyScalar(radius * 3.2));
+      camera.near = Math.max(radius / 100, 0.01);
+      camera.far = radius * 20;
+      camera.updateProjectionMatrix();
+      controls.target.copy(sphere.center);
+      controls.update();
+      grid.position.y = box.min.y - 0.015;
+    }
+
+    function resize() {
+      const rect = canvas.parentElement.getBoundingClientRect();
+      const width = Math.max(240, Math.floor(rect.width));
+      const height = Math.max(320, Math.floor(rect.height));
+      renderer.setSize(width, height, false);
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+
+      const stackRect = stackCanvas.parentElement.getBoundingClientRect();
+      stackCanvas.width = Math.max(280, Math.floor(stackRect.width * (window.devicePixelRatio || 1)));
+      stackCanvas.height = Math.max(320, Math.floor((stackRect.height - 62) * (window.devicePixelRatio || 1)));
+      updateStackPreview();
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    function readSettings() {
+      const layerCount = clamp(Math.round(Number(layersEl.value) || 48), 2, 160);
+      layersEl.value = String(layerCount);
+      const padding = clamp(Number(paddingEl.value) || 0, 0, 40);
+      paddingEl.value = String(padding);
+      paddingNumberEl.value = String(padding);
+      const edgeExpand = clamp(Math.round(Number(edgeExpandEl.value) || 0), 0, 8);
+      edgeExpandEl.value = String(edgeExpand);
+      edgeExpandNumberEl.value = String(edgeExpand);
+      return {
+        mode: modeEl.value,
+        axis: axisEl.value,
+        layerOrder: layerOrderEl.value || 'low-to-high',
+        layers: layerCount,
+        imageSize: Number(imageSizeEl.value),
+        stampX: Number(stampXEl.value) || 0,
+        stampY: Number(stampYEl.value) || 0,
+        padding,
+        fillColor: fillColorEl.value,
+        outline: outlineEl.checked,
+        layerShape: layerShapeEl.value,
+        edgeExpand,
+        slabView: slabViewEl.value
+      };
+    }
+
+    async function generateLayers() {
+      if (!state.model || state.busy) return;
+      const settings = readSettings();
+      setBusy(true, 'Generating PNG layers...');
+      clearLayers();
+      setProgress(0);
+
+      try {
+        const layers = settings.mode === 'solid'
+          ? await generateSolidLayers(settings)
+          : await generateSlabLayers(settings);
+
+        state.layers = layers;
+        state.lastSettingsKey = settingsKey(settings);
+        state.dirty = false;
+        sliceChip.textContent = `${layers.length} layers`;
+        renderGallery();
+        updateStackPreview();
+        setStatus(`${layers.length} transparent PNG layers ready`);
+        const shapeText = settings.layerShape === 'flat' ? '' : ` with ${layerShapeLabel(settings.layerShape).toLowerCase()}`;
+        const expandText = settings.edgeExpand ? `, ${settings.edgeExpand}px edge expand` : '';
+        summaryEl.textContent = `${settings.imageSize}px PNGs${shapeText}${expandText}, ${layerOrderLabel(settings.axis, settings.layerOrder).toLowerCase()} order, transparent backgrounds.`;
+      } catch (error) {
+        console.error(error);
+        setStatus('Layer generation failed');
+        summaryEl.textContent = error.message || 'Could not generate slices.';
+      } finally {
+        setProgress(0);
+        setBusy(false);
+      }
+    }
+
+    async function generateSolidLayers(settings) {
+      const size = settings.imageSize;
+      const axisInfo = sliceAxisInfo(settings);
+      const axisVector = axisInfo.vector.clone().normalize();
+      const box = new THREE.Box3().setFromObject(state.model);
+      const axisRange = rangeOnVector(box, axisVector);
+      const coordMin = axisRange.min;
+      const coordMax = axisRange.max;
+      const coordSpan = Math.max(coordMax - coordMin, 0.0001);
+      const cameraInfo = makeOrthoCamera(box, axisVector, axisInfo.up, settings.padding);
+      const base = hexToRgb(settings.fillColor);
+
+      const shaderBase = {
+        uniforms: {
+          axisVector: { value: axisVector },
+          coordMin: { value: coordMin },
+          coordSpan: { value: coordSpan }
+        },
+        vertexShader: `
+          varying vec3 vWorldPosition;
+          void main() {
+            vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+            vWorldPosition = worldPosition.xyz;
+            gl_Position = projectionMatrix * viewMatrix * worldPosition;
+          }
+        `,
+        fragmentShader: `
+          varying vec3 vWorldPosition;
+          uniform vec3 axisVector;
+          uniform float coordMin;
+          uniform float coordSpan;
+          void main() {
+            float t = clamp((dot(vWorldPosition, axisVector) - coordMin) / coordSpan, 0.0, 1.0);
+            gl_FragColor = vec4(t, t, t, 1.0);
+          }
+        `,
+        depthTest: true,
+        depthWrite: true,
+        toneMapped: false
+      };
+
+      const frontMaterial = new THREE.ShaderMaterial({ ...shaderBase, side: THREE.FrontSide });
+      const backMaterial = new THREE.ShaderMaterial({ ...shaderBase, side: THREE.BackSide });
+      const depthClone = state.model.clone(true);
+      const depthMeshes = [];
+      depthClone.traverse((child) => {
+        if (child.isMesh) {
+          child.material = frontMaterial;
+          depthMeshes.push(child);
+        }
+      });
+
+      const depthScene = new THREE.Scene();
+      depthScene.add(depthClone);
+      const depthRenderer = new THREE.WebGLRenderer({ antialias: false, alpha: true });
+      depthRenderer.setPixelRatio(1);
+      depthRenderer.setSize(size, size, false);
+      depthRenderer.setClearColor(0x000000, 0);
+      depthRenderer.outputColorSpace = THREE.NoColorSpace;
+      depthRenderer.toneMapping = THREE.NoToneMapping;
+      depthRenderer.autoClear = true;
+
+      const frontPixels = renderPackedCoordinate(depthRenderer, depthScene, cameraInfo.camera, size, frontMaterial, depthMeshes);
+      const backPixels = renderPackedCoordinate(depthRenderer, depthScene, cameraInfo.camera, size, backMaterial, depthMeshes);
+      const layers = [];
+
+      for (let layerIndex = 0; layerIndex < settings.layers; layerIndex += 1) {
+        const physicalLayerIndex = orderedLayerIndex(layerIndex, settings);
+        const layerCoord = coordMin + ((physicalLayerIndex + 0.5) / settings.layers) * coordSpan;
+        const mask = new Uint8Array(size * size);
+
+        for (let y = 0; y < size; y += 1) {
+          const readY = size - 1 - y;
+          for (let x = 0; x < size; x += 1) {
+            const source = (readY * size + x) * 4;
+            const pixel = y * size + x;
+            if (frontPixels[source + 3] < 8 || backPixels[source + 3] < 8) continue;
+
+            const frontCoord = coordMin + (frontPixels[source] / 255) * coordSpan;
+            const backCoord = coordMin + (backPixels[source] / 255) * coordSpan;
+            const low = Math.min(frontCoord, backCoord) - coordSpan * 0.001;
+            const high = Math.max(frontCoord, backCoord) + coordSpan * 0.001;
+            if (layerCoord >= low && layerCoord <= high) {
+              mask[pixel] = 1;
+            }
+          }
+        }
+
+        const layerCanvas = solidLayerToCanvas(mask, physicalLayerIndex, settings.layers, size, base, settings.outline);
+        const layer = await finalizeLayerCanvas(layerCanvas, physicalLayerIndex, settings);
+        layer.name = makeLayerName(layerIndex, settings.layers);
+        layers.push(layer);
+        setProgress((layerIndex + 1) / settings.layers);
+        await nextFrame();
+      }
+
+      frontMaterial.dispose();
+      backMaterial.dispose();
+      depthRenderer.dispose();
+      return layers;
+    }
+
+    function renderPackedCoordinate(rendererInstance, renderScene, renderCamera, size, material, meshes) {
+      for (const mesh of meshes) mesh.material = material;
+      material.needsUpdate = true;
+
+      const target = new THREE.WebGLRenderTarget(size, size, {
+        format: THREE.RGBAFormat,
+        type: THREE.UnsignedByteType,
+        depthBuffer: true,
+        stencilBuffer: false
+      });
+      target.texture.colorSpace = THREE.NoColorSpace;
+      const pixels = new Uint8Array(size * size * 4);
+
+      rendererInstance.setRenderTarget(target);
+      rendererInstance.clear(true, true, true);
+      rendererInstance.render(renderScene, renderCamera);
+      rendererInstance.readRenderTargetPixels(target, 0, 0, size, size, pixels);
+      rendererInstance.setRenderTarget(null);
+      target.dispose();
+      return pixels;
+    }
+
+    function solidLayerToCanvas(mask, layerIndex, layerCount, size, base, outline) {
+      const canvas2d = document.createElement('canvas');
+      canvas2d.width = size;
+      canvas2d.height = size;
+      const context = canvas2d.getContext('2d', { willReadFrequently: false });
+      const image = context.createImageData(size, size);
+      const data = image.data;
+      const heightShade = layerCount <= 1 ? 1 : layerIndex / (layerCount - 1);
+      const layerShade = 0.62 + heightShade * 0.4;
+
+      for (let y = 0; y < size; y += 1) {
+        for (let x = 0; x < size; x += 1) {
+          const pixel = y * size + x;
+          if (!mask[pixel]) continue;
+          const output = pixel * 4;
+          const isEdge = outline && (
+            x === 0 ||
+            y === 0 ||
+            x === size - 1 ||
+            y === size - 1 ||
+            !mask[pixel - 1] ||
+            !mask[pixel + 1] ||
+            !mask[pixel - size] ||
+            !mask[pixel + size]
+          );
+          const shade = isEdge ? layerShade * 0.66 : layerShade;
+          data[output] = clamp(Math.round(base.r * shade), 0, 255);
+          data[output + 1] = clamp(Math.round(base.g * shade), 0, 255);
+          data[output + 2] = clamp(Math.round(base.b * shade), 0, 255);
+          data[output + 3] = 255;
+        }
+      }
+
+      context.putImageData(image, 0, 0);
+      return canvas2d;
+    }
+
+    async function generateSlabLayers(settings) {
+      const size = settings.imageSize;
+      const box = new THREE.Box3().setFromObject(state.model);
+      const axisVector = sliceAxisInfo(settings).vector.clone().normalize();
+      const axisRange = rangeOnVector(box, axisVector);
+      const coordMin = axisRange.min;
+      const coordMax = axisRange.max;
+      const coordSpan = Math.max(coordMax - coordMin, 0.0001);
+      const view = viewDirection(settings.slabView, settings);
+      const cameraInfo = makeOrthoCamera(box, view.direction, view.up, settings.padding);
+      const exportScene = new THREE.Scene();
+      const clonedModel = cloneRenderableModel(state.model);
+      exportScene.add(clonedModel);
+
+      const lightA = new THREE.HemisphereLight(0xffffff, 0x9cafad, 1.7);
+      const lightB = new THREE.DirectionalLight(0xffffff, 2.6);
+      lightB.position.copy(view.direction).add(new THREE.Vector3(0.4, 0.8, 0.2)).normalize().multiplyScalar(5);
+      exportScene.add(lightA, lightB);
+
+      const exportRenderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: true,
+        preserveDrawingBuffer: true
+      });
+      exportRenderer.setPixelRatio(1);
+      exportRenderer.setSize(size, size, false);
+      exportRenderer.setClearColor(0x000000, 0);
+      exportRenderer.outputColorSpace = THREE.SRGBColorSpace;
+      exportRenderer.localClippingEnabled = false;
+
+      const layers = [];
+      for (let layerIndex = 0; layerIndex < settings.layers; layerIndex += 1) {
+        const physicalLayerIndex = orderedLayerIndex(layerIndex, settings);
+        const low = coordMin + (physicalLayerIndex / settings.layers) * coordSpan;
+        const high = coordMin + ((physicalLayerIndex + 1) / settings.layers) * coordSpan;
+        exportRenderer.clippingPlanes = [
+          new THREE.Plane(axisVector.clone(), -low),
+          new THREE.Plane(axisVector.clone().multiplyScalar(-1), high)
+        ];
+        exportRenderer.clear(true, true, true);
+        exportRenderer.render(exportScene, cameraInfo.camera);
+
+        const layerCanvas = document.createElement('canvas');
+        layerCanvas.width = size;
+        layerCanvas.height = size;
+        layerCanvas.getContext('2d').drawImage(exportRenderer.domElement, 0, 0);
+        const layer = await finalizeLayerCanvas(layerCanvas, physicalLayerIndex, settings);
+        layer.name = makeLayerName(layerIndex, settings.layers);
+        layers.push(layer);
+        setProgress((layerIndex + 1) / settings.layers);
+        await nextFrame();
+      }
+
+      exportRenderer.dispose();
+      return layers;
+    }
+
+    function cloneRenderableModel(model) {
+      const clone = model.clone(true);
+      clone.traverse((child) => {
+        if (!child.isMesh) return;
+        const materials = Array.isArray(child.material) ? child.material : [child.material];
+        const clonedMaterials = materials.map((material) => {
+          const next = material ? material.clone() : new THREE.MeshStandardMaterial({ color: 0x29a89c });
+          next.side = THREE.DoubleSide;
+          next.transparent = Boolean(next.transparent);
+          next.needsUpdate = true;
+          return next;
+        });
+        child.material = Array.isArray(child.material) ? clonedMaterials : clonedMaterials[0];
+      });
+      return clone;
+    }
+
+    async function finalizeLayerCanvas(layerCanvas, layerIndex, settings) {
+      const expandedCanvas = settings.edgeExpand
+        ? expandLayerCanvas(layerCanvas, settings.edgeExpand)
+        : layerCanvas;
+      const canvasForExport = settings.layerShape !== 'flat'
+        ? shapeLayerCanvas(expandedCanvas, settings)
+        : expandedCanvas;
+
+      return {
+        canvas: canvasForExport,
+        blob: await canvasToBlob(canvasForExport)
+      };
+    }
+
+    function shapeLayerCanvas(sourceCanvas, settings) {
+      const output = document.createElement('canvas');
+      output.width = sourceCanvas.width;
+      output.height = sourceCanvas.height;
+
+      const context = output.getContext('2d');
+      const transform = layerShapeTransform(settings);
+      const fitScale = Math.min(
+        output.width / (sourceCanvas.width + Math.abs(transform.shearX) * sourceCanvas.height),
+        output.height / (sourceCanvas.height * transform.scaleY)
+      );
+      const centerX = output.width / 2;
+      const centerY = output.height / 2;
+
+      context.save();
+      context.translate(centerX, centerY);
+      context.scale(fitScale, fitScale);
+      context.transform(1, 0, transform.shearX, transform.scaleY, 0, 0);
+      context.drawImage(sourceCanvas, -sourceCanvas.width / 2, -sourceCanvas.height / 2);
+      context.restore();
+
+      return output;
+    }
+
+    function expandLayerCanvas(sourceCanvas, radius) {
+      const output = document.createElement('canvas');
+      output.width = sourceCanvas.width;
+      output.height = sourceCanvas.height;
+      const context = output.getContext('2d');
+
+      for (let y = -radius; y <= radius; y += 1) {
+        for (let x = -radius; x <= radius; x += 1) {
+          if ((x * x) + (y * y) > radius * radius) continue;
+          context.drawImage(sourceCanvas, x, y);
+        }
+      }
+
+      context.drawImage(sourceCanvas, 0, 0);
+      return output;
+    }
+
+    function layerShapeTransform(settings) {
+      const horizontalSign = settings.stampX < 0 ? -1 : 1;
+      const verticalSign = settings.stampY < 0 ? -1 : 1;
+      const direction = horizontalSign * verticalSign;
+      if (settings.layerShape === 'flat') {
+        return {
+          shearX: 0,
+          scaleY: 1
+        };
+      }
+      if (settings.layerShape === 'isometric') {
+        return {
+          shearX: 0.5 * direction,
+          scaleY: 0.5
+        };
+      }
+      return {
+        shearX: 0.5 * direction,
+        scaleY: 1
+      };
+    }
+
+    function layerShapeLabel(shape) {
+      if (shape === 'isometric') return 'Isometric tile';
+      if (shape === 'skew') return 'Skew only';
+      return 'Flat original';
+    }
+
+    function makeOrthoCamera(box, direction, up, paddingPercent) {
+      const center = box.getCenter(new THREE.Vector3());
+      const sphere = box.getBoundingSphere(new THREE.Sphere());
+      const radius = Math.max(sphere.radius, 0.1);
+      const distance = radius * 3.5;
+      const directionNorm = direction.clone().normalize();
+      const cameraOrtho = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.001, radius * 10);
+      cameraOrtho.position.copy(center).addScaledVector(directionNorm, distance);
+      cameraOrtho.up.copy(up.clone().normalize());
+      cameraOrtho.lookAt(center);
+      cameraOrtho.updateMatrixWorld(true);
+
+      const points = boxCorners(box);
+      let minX = Infinity;
+      let maxX = -Infinity;
+      let minY = Infinity;
+      let maxY = -Infinity;
+      for (const point of points) {
+        const cameraPoint = point.clone().applyMatrix4(cameraOrtho.matrixWorldInverse);
+        minX = Math.min(minX, cameraPoint.x);
+        maxX = Math.max(maxX, cameraPoint.x);
+        minY = Math.min(minY, cameraPoint.y);
+        maxY = Math.max(maxY, cameraPoint.y);
+      }
+
+      const half = Math.max(maxX - minX, maxY - minY) * 0.5 * (1 + paddingPercent / 100);
+      cameraOrtho.left = -half;
+      cameraOrtho.right = half;
+      cameraOrtho.top = half;
+      cameraOrtho.bottom = -half;
+      cameraOrtho.near = 0.001;
+      cameraOrtho.far = radius * 10;
+      cameraOrtho.updateProjectionMatrix();
+      return { camera: cameraOrtho, halfSize: half };
+    }
+
+    function sliceAxisInfo(settings) {
+      return axes[settings.axis];
+    }
+
+    function viewDirection(view, settings) {
+      if (view === 'axis') {
+        const axisInfo = sliceAxisInfo(settings);
+        return {
+          direction: axisInfo.vector.clone(),
+          up: axisInfo.up.clone()
+        };
+      }
+      if (view === 'right') {
+        return {
+          direction: new THREE.Vector3(1, 0, 0),
+          up: new THREE.Vector3(0, 1, 0)
+        };
+      }
+      if (view === 'iso') {
+        return {
+          direction: new THREE.Vector3(1, 0.82, 1).normalize(),
+          up: new THREE.Vector3(0, 1, 0)
+        };
+      }
+      return {
+        direction: new THREE.Vector3(0, 0, 1),
+        up: new THREE.Vector3(0, 1, 0)
+      };
+    }
+
+    async function downloadZip() {
+      if (state.busy) return;
+      const settings = readSettings();
+      if (state.dirty || settingsKey(settings) !== state.lastSettingsKey || state.layers.length === 0) {
+        await generateLayers();
+      }
+      if (!state.layers.length) return;
+
+      setBusy(true, 'Building ZIP...');
+      try {
+        const zip = new JSZip();
+        const folder = zip.folder(`${state.modelName}_scratch_layers`);
+        state.layers.forEach((layer) => {
+          folder.file(layer.name, layer.blob);
+        });
+        folder.file('manifest.json', JSON.stringify({
+          model: state.modelName,
+          mode: settings.mode,
+          sliceAxis: settings.axis,
+          layerOrder: layerOrderLabel(settings.axis, settings.layerOrder),
+          layers: state.layers.length,
+          imageSize: settings.imageSize,
+          scratchStep: {
+            x: settings.stampX,
+            y: settings.stampY
+          },
+          layerShape: {
+            mode: settings.layerShape,
+            ...layerShapeTransform(settings)
+          },
+          edgeExpandPx: settings.edgeExpand,
+          order: layerOrderLabel(settings.axis, settings.layerOrder),
+          transparentBackground: true
+        }, null, 2));
+
+        const blob = await zip.generateAsync({ type: 'blob' }, (metadata) => {
+          setProgress(metadata.percent / 100);
+        });
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = `${state.modelName}_scratch_layers.zip`;
+        document.body.append(anchor);
+        anchor.click();
+        anchor.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        setStatus('ZIP downloaded');
+      } catch (error) {
+        console.error(error);
+        setStatus('ZIP failed');
+        summaryEl.textContent = error.message || 'Could not build the ZIP file.';
+      } finally {
+        setProgress(0);
+        setBusy(false);
+      }
+    }
+
+    function renderGallery() {
+      for (const url of state.layerUrls) URL.revokeObjectURL(url);
+      state.layerUrls = [];
+      gallery.replaceChildren();
+
+      const sampleCount = Math.min(state.layers.length, 24);
+      const stride = Math.max(1, Math.floor(state.layers.length / sampleCount));
+      for (let i = 0; i < state.layers.length; i += stride) {
+        const layer = state.layers[i];
+        const url = URL.createObjectURL(layer.blob);
+        state.layerUrls.push(url);
+
+        const item = document.createElement('div');
+        item.className = 'thumb';
+        const image = document.createElement('img');
+        image.src = url;
+        image.alt = `Layer ${i + 1}`;
+        const label = document.createElement('span');
+        label.textContent = String(i + 1).padStart(3, '0');
+        item.append(image, label);
+        gallery.append(item);
+      }
+    }
+
+    function updateStackPreview() {
+      const context = stackCanvas.getContext('2d');
+      const ratio = window.devicePixelRatio || 1;
+      context.setTransform(1, 0, 0, 1, 0, 0);
+      context.clearRect(0, 0, stackCanvas.width, stackCanvas.height);
+
+      if (!state.layers.length) {
+        drawEmptyStack(context, ratio);
+        return;
+      }
+
+      const size = state.layers[0].canvas.width;
+      const stepX = Number(stampXEl.value) || 0;
+      const stepY = -(Number(stampYEl.value) || 0);
+      const totalX = stepX * (state.layers.length - 1);
+      const totalY = stepY * (state.layers.length - 1);
+      const margin = 24 * ratio;
+      const sourceW = size + Math.abs(totalX);
+      const sourceH = size + Math.abs(totalY);
+      const scale = Math.max(0.05, Math.min(
+        (stackCanvas.width - margin * 2) / sourceW,
+        (stackCanvas.height - margin * 2) / sourceH
+      ));
+      const drawSize = size * scale;
+      const minOffsetX = Math.min(0, totalX) * scale;
+      const maxOffsetX = Math.max(0, totalX) * scale;
+      const minOffsetY = Math.min(0, totalY) * scale;
+      const maxOffsetY = Math.max(0, totalY) * scale;
+      const startX = (stackCanvas.width - (drawSize + maxOffsetX - minOffsetX)) / 2 - minOffsetX;
+      const startY = (stackCanvas.height - (drawSize + maxOffsetY - minOffsetY)) / 2 - minOffsetY;
+
+      context.imageSmoothingEnabled = true;
+      context.imageSmoothingQuality = 'high';
+      for (let i = 0; i < state.layers.length; i += 1) {
+        context.drawImage(
+          state.layers[i].canvas,
+          startX + stepX * i * scale,
+          startY + stepY * i * scale,
+          drawSize,
+          drawSize
+        );
+      }
+    }
+
+    function drawEmptyStack(context, ratio) {
+      context.save();
+      context.scale(ratio, ratio);
+      context.fillStyle = '#637073';
+      context.font = '700 14px Inter, system-ui, sans-serif';
+      context.textAlign = 'center';
+      context.textBaseline = 'middle';
+      context.fillText('Generate layers to preview the stamp stack', stackCanvas.width / ratio / 2, stackCanvas.height / ratio / 2);
+      context.restore();
+    }
+
+    function clearLayers() {
+      for (const url of state.layerUrls) URL.revokeObjectURL(url);
+      state.layerUrls = [];
+      state.layers = [];
+      gallery.replaceChildren();
+    }
+
+    function clearObjectUrls() {
+      for (const url of state.objectUrls) URL.revokeObjectURL(url);
+      state.objectUrls = [];
+    }
+
+    function markDirty() {
+      state.dirty = true;
+      const settings = readSettings();
+      sliceChip.textContent = `${settings.layers} layers`;
+      updateStackPreview();
+    }
+
+    function updateSlabControls() {
+      slabViewField.style.display = modeEl.value === 'slab' ? 'grid' : 'none';
+    }
+
+    function updateLayerOrderOptions() {
+      const current = layerOrderEl.value || 'low-to-high';
+      const labels = layerOrderLabels(axisEl.value);
+      layerOrderEl.replaceChildren();
+
+      for (const [value, label] of Object.entries(labels)) {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = label;
+        layerOrderEl.append(option);
+      }
+
+      layerOrderEl.value = labels[current] ? current : 'low-to-high';
+    }
+
+    function setBusy(isBusy, message = '') {
+      state.busy = isBusy;
+      generateBtn.disabled = isBusy;
+      downloadBtn.disabled = isBusy;
+      modelInput.disabled = isBusy;
+      if (message) setStatus(message);
+    }
+
+    function setStatus(message) {
+      statusEl.textContent = message;
+    }
+
+    function setProgress(value) {
+      progressEl.value = clamp(value, 0, 1);
+    }
+
+    function settingsKey(settings) {
+      return JSON.stringify(settings);
+    }
+
+    function orderedLayerIndex(index, settings) {
+      return settings.layerOrder === 'high-to-low'
+        ? settings.layers - 1 - index
+        : index;
+    }
+
+    function layerOrderLabels(axis) {
+      if (axis === 'z') {
+        return {
+          'low-to-high': 'Back to front',
+          'high-to-low': 'Front to back'
+        };
+      }
+      if (axis === 'x') {
+        return {
+          'low-to-high': 'Left to right',
+          'high-to-low': 'Right to left'
+        };
+      }
+      return {
+        'low-to-high': 'Bottom to top',
+        'high-to-low': 'Top to bottom'
+      };
+    }
+
+    function layerOrderLabel(axis, order) {
+      return layerOrderLabels(axis)[order] || layerOrderLabels(axis)['low-to-high'];
+    }
+
+    function canvasToBlob(sourceCanvas) {
+      return new Promise((resolve, reject) => {
+        sourceCanvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error('Could not create PNG data.'));
+        }, 'image/png');
+      });
+    }
+
+    function nextFrame() {
+      return new Promise((resolve) => requestAnimationFrame(resolve));
+    }
+
+    function rangeOnVector(box, vector) {
+      let min = Infinity;
+      let max = -Infinity;
+      for (const corner of boxCorners(box)) {
+        const value = corner.dot(vector);
+        min = Math.min(min, value);
+        max = Math.max(max, value);
+      }
+      return { min, max };
+    }
+
+    function boxCorners(box) {
+      return cornerOffsets.map(([x, y, z]) => new THREE.Vector3(
+        x ? box.max.x : box.min.x,
+        y ? box.max.y : box.min.y,
+        z ? box.max.z : box.min.z
+      ));
+    }
+
+    function hexToRgb(hex) {
+      const value = hex.replace('#', '');
+      return {
+        r: parseInt(value.slice(0, 2), 16),
+        g: parseInt(value.slice(2, 4), 16),
+        b: parseInt(value.slice(4, 6), 16)
+      };
+    }
+
+    function makeLayerName(index, count) {
+      const width = String(count).length;
+      return `layer_${String(index + 1).padStart(width, '0')}.png`;
+    }
+
+    function safeBaseName(filename) {
+      return filename
+        .replace(/\.[^.]+$/, '')
+        .replace(/[^a-z0-9_-]+/gi, '-')
+        .replace(/^-+|-+$/g, '')
+        .toLowerCase() || 'model';
+    }
+
+    function clamp(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+  </script>
+
+
+</body></html>

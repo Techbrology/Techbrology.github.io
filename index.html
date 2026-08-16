@@ -326,6 +326,11 @@ const APPS = [
     folder: "roleplay",
     description: "My next project for roleplay ai"
   },
+  {
+    name: "Scratch 3D Stamp Slicer",
+    page: "Scratch%203D%20Stamp%20Slicer.html",
+    description: "Scratch-based 3D image slicer tool"
+  },
 ];
 
 const featuredGrid = document.getElementById("featuredGrid");
@@ -360,7 +365,7 @@ FEATURED_PROJECTS.forEach(project => {
 APPS.forEach(app => {
   const a = document.createElement("a");
   a.className = "app";
-  a.href = `apps/${app.folder}/`;
+  a.href = app.page || `apps/${app.folder}/`;
   a.innerHTML = `
     <h4>${app.name}</h4>
     <p>${app.description}</p>
