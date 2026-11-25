@@ -92,6 +92,14 @@ nav a:hover{
   transform-origin:center center;
   margin-right:5px;
 }
+.ai-icon{
+  width:24px;
+  height:24px;
+  display:grid;
+  place-items:center;
+  font-weight:700;
+  color:var(--hover);
+}
 
 .hero{
   margin-top:40px;
@@ -183,6 +191,10 @@ nav a:hover{
 }
 @media(max-width:600px){
   .grid{grid-template-columns:1fr}
+  .top{flex-wrap:wrap;gap:18px}
+  nav a span{display:none}
+  nav a{padding:8px 12px}
+  nav .nav-icon{margin-right:0;transform:none}
 }
 
 .app{
@@ -236,19 +248,20 @@ footer{
       </div>
     </div>
     <nav>
-      <a href="#apps">
+      <a href="ai-in-scratch.html" aria-label="AI in Scratch"><b class="ai-icon" aria-hidden="true">AI</b><span>AI in Scratch</span></a>
+      <a href="#apps" aria-label="Apps">
         <img class="nav-icon" src="apps.png" alt="Apps icon">
         <span>Apps</span>
       </a>
-      <a href="https://www.youtube.com/@techbrology" target="_blank">
+      <a href="https://www.youtube.com/@techbrology" target="_blank" aria-label="Youtube">
         <img class="nav-icon" src="animated-yt-logo.gif" alt="Youtube icon">
         <span>Youtube</span>
       </a>
-      <a href="https://scratch.mit.edu/users/Tate-1809/" target="_blank">
+      <a href="https://scratch.mit.edu/users/Tate-1809/" target="_blank" aria-label="Scratch">
         <img class="nav-icon" src="scratch-icon.gif" alt="Scratch icon">
         <span>Scratch</span>
       </a>
-      <a href="https://github.com/techbrology" target="_blank">
+      <a href="https://github.com/techbrology" target="_blank" aria-label="Github">
         <img class="nav-icon" src="animated-github-logo.gif" alt="Github icon">
         <span>Github</span>
       </a>
@@ -302,16 +315,21 @@ footer{
 <script>
 const FEATURED_PROJECTS = [
   {
-    name: "Texa AI image",
+    name: "Texa AI image - AI in Scratch",
     page: "texa-ai-image.html",
     preview: "texa-preview.png",
     description: "This is the image generator"
   },
   {
-    name: "Techbrology AI Chatbot",
+    name: "Techbrology AI Chatbot - AI in Scratch",
     page: "techbrology-chatbot-ai.html",
     preview: "chatbot-preview.png",
     description: "AI chatbot from \"I made an AI and I can't even code\""
+  },
+  {
+    name: "0.4 million Parameter Neural Network Text Gen",
+    page: "neural-network-text-gen.html",
+    description: "A neural network text generator made in Scratch."
   },
 ];
 
@@ -346,13 +364,13 @@ FEATURED_PROJECTS.forEach(project => {
         href="${project.page}"
         aria-label="Open ${project.name}"
       ></a>
-      <img
+      ${project.preview ? `<img
         class="preview-frame"
         src="${project.preview}"
         title="${project.name} preview"
         loading="lazy"
         alt="${project.name} preview"
-      >
+      >` : `<div class="preview-frame" style="display:grid;place-items:center;color:var(--muted);font-size:28px;text-align:center;padding:20px">0.4M<br>TEXT GEN</div>`}
     </div>
     <div class="feature-copy">
       <h3><a href="${project.page}">${project.name}</a></h3>
